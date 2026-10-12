@@ -313,8 +313,72 @@ def run_checks() -> int:
     print("\nAll Upstream Quality Gates Passed.")
     return 0
 
-if __name__ == "__main__":
-    sys.exit(run_checks())
+### 4.5 Upstream GitHub Actions Workflow (`.github/workflows/ci.yml`)
+
+```yaml
+name: Upstream CI Quality Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Verify Upstream Template & Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Tooling Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install copier bump-my-version pytest pytest-copie ruff mypy djlint pymarkdownlnt pre-commit
+
+      - name: Run Deterministic Verification Runner
+        run: |
+          python scripts/verify.py
+```
+
+### 4.6 Downstream CI Pipeline Template (`template/.github/workflows/ci.yml.jinja`)
+
+```yaml
+name: Downstream Hexagonal Boundary & Quality CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Verify Hexagonal Architecture & Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "{{ python_version }}"
+
+      - name: Install Astral uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Synchronize Virtual Environment
+        run: uv sync --all-extras
+
+      - name: Run Deterministic Verification Runner
+        run: uv run python scripts/verify.py
 ```
 
 ---

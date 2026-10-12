@@ -2,15 +2,28 @@
 """Upstream Quality Verification Runner for python-hexagonal-template."""
 
 import os
+import shutil
 import subprocess
 import sys
 
+# Locate binaries: prefer active virtualenv/system PATH, fallback to .venv/bin
 VENV_BIN = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".venv", "bin")
 
+
+def get_bin(cmd_name: str) -> str:
+    path_bin = shutil.which(cmd_name)
+    if path_bin:
+        return path_bin
+    venv_candidate = os.path.join(VENV_BIN, cmd_name)
+    if os.path.exists(venv_candidate):
+        return venv_candidate
+    return cmd_name
+
+
 CHECKS = [
-    ("Pre-commit hooks", [os.path.join(VENV_BIN, "pre-commit"), "run", "--all-files"]),
-    ("Jinja formatting & lint", [os.path.join(VENV_BIN, "djlint"), "template/", "--check"]),
-    ("Unit and template tests", [os.path.join(VENV_BIN, "pytest"), "tests/"]),
+    ("Pre-commit hooks", [get_bin("pre-commit"), "run", "--all-files"]),
+    ("Jinja formatting & lint", [get_bin("djlint"), "template/", "--check"]),
+    ("Unit and template tests", [get_bin("pytest"), "tests/"]),
 ]
 
 
