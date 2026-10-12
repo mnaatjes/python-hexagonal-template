@@ -291,12 +291,23 @@ The template strictly enforces Python standard library mechanisms for all port d
   * `strict_typing`: Static type checking (`mypy --strict`) asserting adapter adherence to port protocols.
   * `pytest_archon`: Boundary assertions verifying that `core/ports/` does not import adapter packages.
 
+### 4.9 Downstream Emulation & Negative Mutation Testing Suite
+To ensure that downstream enforcement mechanisms are not merely static configurations that pass without actually intercepting violations, the upstream test suite executes dual-plane behavioral testing:
+1. **Positive Baseline Verification (`tests/test_template_generation.py`):**
+   * Renders the downstream template into an isolated temporary directory via Copier.
+   * Asserts that the pristine rendered project passes all linters and tests out-of-the-box.
+2. **Negative Mutation Testing (`tests/test_truth_enforcement.py`):**
+   * Programmatically mutates the rendered downstream files to induce illegal dependency directions, forbidden layer imports, or non-abstract port signatures.
+   * Runs the downstream enforcement tools against the mutated project and asserts that the violation produces a non-zero exit code (exit code 1) and outputs the expected error diagnostic.
+
 ---
 
 ## 5. Phased Implementation Plan
 
 - [x] **Phase 1: Registry Foundation & Validator:** Create `architecture/rules/hexagonal_truths.yaml`, implement `scripts/verify_truths.py` with empty-state tolerance, and wire into `scripts/verify.py` and `.pre-commit-config.yaml`.
-- [ ] **Phase 2: Single Source of Truth Alignment:** Bind `hexagonal_truths.yaml` `schema_version` to `bump-my-version` in `pyproject.toml`.
-- [ ] **Phase 3: Source Topology Foundation:** Scaffold `template/src/{{package_name}}/` directory tree with core, ports, adapters, and bootstrap packages.
-- [ ] **Phase 4: Canonical Hexagonal Truths Realization:** Implement `HEXA-TRUTH-01` through `HEXA-TRUTH-06` across all four operational planes.
-- [ ] **Phase 5: Release on Main:** Execute `bump-my-version` exclusively on `main` following PR merge.
+- [x] **Phase 2: Single Source of Truth Alignment:** Bind `hexagonal_truths.yaml` `schema_version` to `bump-my-version` in `pyproject.toml`.
+- [x] **Phase 3: Source Topology Foundation:** Scaffold `template/src/{{package_name}}/` directory tree with core, ports, adapters, and bootstrap packages (Topology A).
+- [x] **Phase 4: Port Interface Standards & HEXA-TRUTH-03:** Codify standard library protocols/ABCs and wire `HEXA-TRUTH-03` across all 4 planes.
+- [ ] **Phase 5: Downstream Behavioral & Negative Mutation Testing:** Implement positive smoke tests and negative mutation tests in `tests/test_truth_enforcement.py`.
+- [ ] **Phase 6: Canonical Hexagonal Truths Realization:** Implement `HEXA-TRUTH-04` through `HEXA-TRUTH-06` across all four operational planes.
+- [ ] **Phase 7: Release on Main:** Execute `bump-my-version` exclusively on `main` following PR merge.

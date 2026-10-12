@@ -144,6 +144,11 @@ To eliminate framework bloat and preserve language-level portability, interface 
   * Concrete classes, standalone untyped functions, and transport/infrastructure classes (e.g. `FastAPI.Request`, `SQLAlchemy.Session`, `boto3.client`) are strictly forbidden in port method signatures.
 * **Binding Invariant:** Enforced downstream mechanically via `HEXA-TRUTH-03` combining `strict_typing` (`mypy --strict`) and `pytest_archon` / AST inspection.
 
+### 10. Dual-Plane Downstream Behavioral Testing Harness
+To prevent releasing "paper tiger" enforcement contracts that pass static audits but fail to catch actual code violations, the Upstream verification suite incorporates an emulated downstream behavioral testing harness:
+* **Positive Baseline Smoke Gate:** Programmatically renders the Copier template into an ephemeral directory in CI and executes the downstream test suite and linters to prove the default scaffold passes with exit code 0.
+* **Negative Mutation Testing Gate:** Injects deliberate, synthetic architectural violations (e.g. core domain importing outer adapters, broken inward dependencies) into the rendered project and asserts that the downstream linters (`import-linter`, `pytest-archon`, AST inspectors) physically reject the violation with exit code 1.
+
 ---
 
 ## Consequences
