@@ -54,6 +54,48 @@ All rendered downstream files, Jinja templates, and skeleton code will reside st
 * When a downstream project is created via `copier copy gh:mnaatjes/python-hexagonal-template <dest>`, Copier records the current upstream Git tag in `.copier-answers.yml` (`_commit: vX.Y.Z`).
 * When downstream developers run `copier update`, Copier queries upstream Git tags via `git ls-remote --tags`, calculates the diff against the current receipt, and performs a 3-way merge to apply template improvements safely.
 
+### 4. Specification for Upstream `copier.yaml`
+
+The root `copier.yaml` manifest defines template behavior, prompts, dependencies, and automated lifecycle tasks:
+
+#### A. Core Engine Properties
+* `_subdirectory: template`: Restricts Copier strictly to rendering files within the `template/` directory.
+* `_min_copier_version: "9.0.0"`: Enforces modern Copier runtime capabilities (3-way merge, custom tasks).
+* `_answers_file: ".copier-answers.yml"`: Standard receipt location for downstream update tracking.
+
+#### B. Interactive Configuration Variables (Prompts)
+1. `project_name` (str): Human-readable name (e.g., `Payment Gateway Service`).
+2. `project_slug` (str, computed): Kebab-case repository identifier derived via Jinja: `{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}`.
+3. `package_name` (str, computed): Valid Python package identifier derived via Jinja: `{{ project_name | lower | replace(' ', '_') | replace('-', '_') }}`.
+4. `project_description` (str): Short summary of the bounded context.
+5. `author_name` (str): Primary author or team name.
+6. `author_email` (str): Contact email for code ownership.
+7. `python_version` (choice): Supported runtime version (default: `"3.12"`, options: `["3.12", "3.13"]`).
+8. `include_architecture_governance` (bool, default `true`): Toggles rendering of initial Unified Process documentation starter directories (`architecture/adr/`, `architecture/risk/`, `architecture/use-cases/`).
+
+#### C. Downstream Tooling & Dependencies Managed by Template
+The template payload (`template/pyproject.toml.jinja`) configures the following toolchain for downstream projects:
+* **Package & Environment Manager:** `uv` (Astral) for deterministic virtual environment management and fast dependency resolution.
+* **Deterministic Boundary Enforcement:**
+  * `import-linter`: Enforces `.importlinter` boundary contracts (e.g. forbidding `core/domain` from importing `adapters/` or outer infrastructure).
+  * `pytest-archon`: Executes unit tests asserting module dependency directions.
+* **Code Hygiene & Quality:**
+  * `ruff`: High-speed linter and formatter.
+  * `mypy`: Static type analysis.
+* **Test Automation:** `pytest`, `pytest-cov`, `pytest-asyncio`.
+* **Git Hook Gatekeeper:** `pre-commit` to prevent committing architectural violations.
+
+#### D. Automated Lifecycle Tasks (`_tasks`)
+Copier executes post-generation tasks sequentially in the generated target workspace:
+```yaml
+_tasks:
+  - "git init"
+  - "uv sync --all-extras"
+  - "uv run pre-commit install"
+  - "git add -A"
+  - "git commit -m 'chore: initial project scaffold via python-hexagonal-template'"
+```
+
 ---
 
 ## Consequences
