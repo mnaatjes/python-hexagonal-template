@@ -1,6 +1,6 @@
 ---
 title: "SDD-0002: Hexagonal Truths Registry and Deterministic Multi-Mechanism Validator"
-status: "in-progress"
+status: "adopted"
 authors: ["@mnaatjes"]
 reviewers: ["Systems Engineering Team"]
 created_at: "2026-10-12"

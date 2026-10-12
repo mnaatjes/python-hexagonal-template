@@ -1,6 +1,6 @@
 ---
 title: "ADR 0002: Adoption of Hexagonal Truths Registry and Multi-Mechanism Enforcement Harness"
-status: "proposed"
+status: "adopted"
 date: "2026-10-12"
 tags: ["adr", "governance", "hexagonal-architecture", "enforcement", "registry"]
 ---
