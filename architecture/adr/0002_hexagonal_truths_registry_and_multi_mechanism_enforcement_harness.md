@@ -83,6 +83,12 @@ A deterministic validator script (`scripts/verify_truths.py`) is added as Gate 0
 * **Existence Verification:** Asserts that every declared contract, documentation file, anchor, and test function physically exists on disk.
 * **Minimum Threshold:** Asserts that every registered truth binds to **at least one** active enforcement mechanism.
 
+### 5. Upstream Agent Authoring Skill (`.gemini/skills/hexagonal-truth-authoring/`)
+To eliminate LLM alignment drift during the authoring of new architectural rules, the Upstream repository equips coding agents with a dedicated skill:
+* **Playbook:** `.gemini/skills/hexagonal-truth-authoring/SKILL.md` orchestrates a strict 5-phase execution flow (Inception & Catalog Selection $\to$ Quad-Plane Lockstep Authoring $\to$ Registry Binding $\to$ Gate Verification $\to$ Packaging).
+* **System Directive:** `.gemini/rules/hexagonal_truth_governance.md` triggers this skill whenever the operator asks to establish or modify a Hexagonal truth.
+* **Enforcement:** The agent is instructed to run `scripts/verify_truths.py` locally before proposing any changes.
+
 ---
 
 ## Consequences

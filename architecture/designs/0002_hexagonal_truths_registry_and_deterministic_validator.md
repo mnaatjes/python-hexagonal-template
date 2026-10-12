@@ -224,6 +224,16 @@ if __name__ == "__main__":
     sys.exit(validate_truth_chain())
 ```
 
+### 4.2 Upstream Agent Workflow Skill (`.gemini/skills/hexagonal-truth-authoring/`)
+To eliminate LLM alignment drift and guarantee full realization of every newly declared truth, the Upstream environment equips coding assistants with a dedicated Antigravity skill:
+* **Trigger Directive:** `.gemini/rules/hexagonal_truth_governance.md` routes any request regarding adding or modifying architectural truths to `.gemini/skills/hexagonal-truth-authoring/SKILL.md`.
+* **Execution Flow:** The skill mandates a 5-phase sequential playbook:
+  1. **Phase 1 (Inception & Catalog Selection):** Assign sequential `HEXA-TRUTH-NN` ID and choose tools from the 5-tool catalog.
+  2. **Phase 2 (Quad-Plane Lockstep Authoring):** Generate linter contract, user documentation (`template/docs/reference/`), agent rule (`template/.gemini/rules/`), and compliance tests (`template/tests/architecture/`).
+  3. **Phase 3 (Registry Binding):** Append record to `architecture/rules/hexagonal_truths.yaml`.
+  4. **Phase 4 (Deterministic Verification):** Execute `scripts/verify_truths.py` and `scripts/verify.py` asserting exit code 0.
+  5. **Phase 5 (Git & PR):** Commit, push, and open Pull Request.
+
 ---
 
 ## 5. Phased Implementation Plan
