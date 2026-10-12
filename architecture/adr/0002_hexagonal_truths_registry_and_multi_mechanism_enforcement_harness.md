@@ -72,14 +72,23 @@ The registry recognizes five distinct enforcement capabilities available in the 
 
 ### 3. Registry Schema (`architecture/rules/hexagonal_truths.yaml`)
 The registry defines:
+* `schema_version`: String matching the repository semantic version managed by `bump-my-version`.
 * `enforcement_catalog`: The dictionary of available enforcement capabilities and their base paths.
-* `truths`: The ordered list of architectural invariants. Each truth declares:
-  * `id`: Unique identifier (e.g. `HEXA-TRUTH-01`).
-  * `name` & `summary`: Human-readable statement of the invariant.
-  * `enforcements`: A non-empty list of one or more concrete bindings referencing the catalog.
-  * `documentation`: Path and anchor string in `template/docs/`.
-  * `agent_skill`: Path and anchor string in `template/.gemini/rules/` or `SKILL.md`.
-  * `verification_tests`: Paths and test function names in `template/tests/`.
+* `truths`: The ordered list of architectural invariants. The canonical catalog encompasses six core invariants:
+  1. `HEXA-TRUTH-01` (**Pure Core Domain Isolation**): The core domain must never import external infrastructure, database drivers, web frameworks, or adapter packages.
+  2. `HEXA-TRUTH-02` (**Inward Dependency Direction**): Dependencies flow strictly inward; driving and driven adapters depend on port contracts, never vice versa.
+  3. `HEXA-TRUTH-03` (**Port Abstraction & Protocol Integrity**): Driving and Driven Ports must be declared as abstract contracts (`typing.Protocol` with `@runtime_checkable` or `abc.ABC`). Adapters implement ports without leaking transport types.
+  4. `HEXA-TRUTH-04` (**DTO & Anti-Tunneling Boundary Purity**): Data crossing port boundaries must use immutable DTOs or standard primitives, strictly forbidding domain entity leakage or ORM object tunneling.
+  5. `HEXA-TRUTH-05` (**Zero Lifecycle Pollution in Domain**): Adapters manage runtime process lifecycles (event loops, threads, network polling); domain services must never execute `.start()`, `.stop()`, or framework lifecycle hooks.
+  6. `HEXA-TRUTH-06` (**Composition Root Isolation**): Dependency injection, adapter instantiation, and environment binding occur exclusively in `bootstrap/` or application entrypoints, never inside domain logic or adapters.
+
+Each truth declares:
+* `id`: Unique identifier (e.g. `HEXA-TRUTH-01`).
+* `name` & `summary`: Human-readable statement of the invariant.
+* `enforcements`: A non-empty list of one or more concrete bindings referencing the catalog.
+* `documentation`: Path and anchor string in `template/docs/`.
+* `agent_skill`: Path and anchor string in `template/.gemini/rules/` or `SKILL.md`.
+* `verification_tests`: Paths and test function names in `template/tests/`.
 
 ### 4. Declared-Binding Integrity Rule & Pipeline Wiring (`scripts/verify_truths.py`)
 A deterministic validator script (`scripts/verify_truths.py`) is wired directly into the repository quality pipeline across two gates:
@@ -102,6 +111,28 @@ To eliminate LLM alignment drift during the authoring of new architectural rules
 
 ### 6. Upstream Versioning & Release Governance
 Execution of `bump-my-version` in the Upstream repository is strictly relegated to the `main` branch. Feature, fix, and architectural branches (including truth-definition branches) must never invoke version bumps or generate release tags. Releases are triggered exclusively on `main` following PR merge and successful dual-gate pipeline verification.
+
+### 7. Schema Version Single Source of Truth (SSoT)
+`architecture/rules/hexagonal_truths.yaml` contains property `schema_version`. To eliminate version desynchronization, this property is configured in upstream `pyproject.toml` under `[[tool.bumpversion.files]]` as part of the release automation SSoT.
+
+### 8. Downstream Source Topology Invariant (`template/src/{{package_name}}/`)
+Static architectural enforcement mechanisms (`import-linter`, `pytest-archon`, and AST scanners) require concrete module namespaces to parse import graphs. The downstream template MUST establish the canonical source layout (Topology A):
+```
+template/src/{{package_name}}/
+├── __init__.py
+├── core/
+│   ├── __init__.py
+│   ├── domain/        # Pure entities, value objects, domain logic
+│   ├── use_cases/     # Application use-case orchestrators (workflows)
+│   └── ports/         # Boundary protocol contracts (Protocols / ABCs)
+│       ├── driving/   # Inbound ports implemented by Use Cases or called by Adapters
+│       └── driven/    # Outbound ports implemented by Driven Adapters
+├── adapters/
+│   ├── __init__.py
+│   ├── driving/       # Inbound HTTP routes, CLI handlers, event subscribers
+│   └── driven/        # Outbound persistence repositories, cloud/network clients
+└── bootstrap/         # Composition root, dependency injection wiring
+```
 
 ---
 

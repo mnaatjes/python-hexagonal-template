@@ -254,7 +254,26 @@ To eliminate LLM alignment drift and guarantee full realization of every newly d
   4. **Phase 4 (Deterministic Verification):** Execute `scripts/verify_truths.py` and `scripts/verify.py` asserting exit code 0.
   5. **Phase 5 (Git & PR):** Commit, push, and open Pull Request.
 
-### 4.4 Upstream Versioning & Release Governance Proviso
+### 4.5 Schema Versioning SSoT (`bump-my-version`)
+`architecture/rules/hexagonal_truths.yaml` contains property `schema_version`. To maintain synchronization with upstream repository releases, `pyproject.toml` configures a dedicated bump target:
+```toml
+[[tool.bumpversion.files]]
+filename = "architecture/rules/hexagonal_truths.yaml"
+search = 'schema_version: "{current_version}"'
+replace = 'schema_version: "{new_version}"'
+```
+
+### 4.6 Downstream Source Tree Topology (`template/src/{{package_name}}/`)
+Static architecture enforcement tools (`import-linter`, `pytest-archon`, and AST inspectors) cannot operate on flat or arbitrary directory trees. The template payload establishes Topology A:
+* `src/{{package_name}}/core/domain/`: Pure business entities, value objects, and domain logic.
+* `src/{{package_name}}/core/use_cases/`: Application use-case orchestrators and workflows.
+* `src/{{package_name}}/core/ports/driving/`: Inbound/primary port abstractions (Protocols/ABCs).
+* `src/{{package_name}}/core/ports/driven/`: Outbound/secondary port abstractions (Protocols/ABCs).
+* `src/{{package_name}}/adapters/driving/`: Inbound controllers, CLI handlers, API endpoints.
+* `src/{{package_name}}/adapters/driven/`: Outbound persistence repositories, cloud/network clients.
+* `src/{{package_name}}/bootstrap/`: Dependency injection composition root.
+
+### 4.7 Upstream Versioning & Release Governance Proviso
 Execution of `bump-my-version` in the Upstream repository is strictly relegated to the `main` branch:
 * **Feature & Architectural Branches:** Version bumps and git release tags are strictly prohibited on working branches (e.g. `docs/`, `feat/`, `fix/`).
 * **Release Cadence:** `bump-my-version bump [patch|minor|major]` must be invoked exclusively after pull requests are merged into `main` and verified by upstream CI.
@@ -263,8 +282,8 @@ Execution of `bump-my-version` in the Upstream repository is strictly relegated 
 
 ## 5. Phased Implementation Plan
 
-- [ ] **Phase 1: Registry Foundation:** Create `architecture/rules/hexagonal_truths.yaml` defining the 5-tool catalog and initial truths (`HEXA-TRUTH-01` through `HEXA-TRUTH-05`).
-- [ ] **Phase 2: Validator Runner & Dual-Gate Wiring:** Implement `scripts/verify_truths.py` with empty-state tolerance and wire into `scripts/verify.py` and `.pre-commit-config.yaml`.
-- [ ] **Phase 3: Payload Integration:** Provide initial starter documents (`template/docs/reference/hexagonal_rules.md`, `template/.gemini/rules/hexagonal_invariants.md`, and `template/tests/architecture/test_boundaries.py`).
-- [ ] **Phase 4: CI Verification & Push:** Run `scripts/verify.py` locally and in GitHub Actions CI to assert 100% compliance.
+- [x] **Phase 1: Registry Foundation & Validator:** Create `architecture/rules/hexagonal_truths.yaml`, implement `scripts/verify_truths.py` with empty-state tolerance, and wire into `scripts/verify.py` and `.pre-commit-config.yaml`.
+- [ ] **Phase 2: Single Source of Truth Alignment:** Bind `hexagonal_truths.yaml` `schema_version` to `bump-my-version` in `pyproject.toml`.
+- [ ] **Phase 3: Source Topology Foundation:** Scaffold `template/src/{{package_name}}/` directory tree with core, ports, adapters, and bootstrap packages.
+- [ ] **Phase 4: Canonical Hexagonal Truths Realization:** Implement `HEXA-TRUTH-01` through `HEXA-TRUTH-06` across all four operational planes.
 - [ ] **Phase 5: Release on Main:** Execute `bump-my-version` exclusively on `main` following PR merge.

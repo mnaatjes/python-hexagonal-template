@@ -18,5 +18,5 @@ name = inward_dependency_direction
 type = layers
 layers =
     adapters
-    core.application
+    core.use_cases
     core.domain

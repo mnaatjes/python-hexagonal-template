@@ -32,6 +32,11 @@ filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
+[[tool.bumpversion.files]]
+filename = "architecture/rules/hexagonal_truths.yaml"
+search = 'schema_version: "{current_version}"'
+replace = 'schema_version: "{new_version}"'
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

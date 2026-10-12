@@ -1,1 +1,5 @@
 - [ ] Have LLM articulate list of estabilshed rules in yaml file.
+- [x] Update `architecture/rules/hexagonal_truths.yaml` property "schema_version" to be dependent on bump-my-version SSoT
+- [x] Determine if the src/ directory topology MUST be established for enforcement mechanisms to work (Resolved: Topology A established)
+- [ ] When scripts/ enforcement required, should we architect downstream scripts/ directory with a lib/ sub-dir for atomized tests?
+- [ ] For abstract ports, contracts, and interfaces - what python packages will we use, what will we permit the user to implement?

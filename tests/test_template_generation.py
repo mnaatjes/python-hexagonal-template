@@ -42,6 +42,18 @@ def test_template_instantiation_with_defaults(tmp_path: Path) -> None:
         / "0001_copier_template_engine_and_upstream_versioning_regime.md"
     ).exists()
 
+    # Assert Topology A directory structure rendered with package name
+    pkg_dir = target_dir / "src" / "hexagonal_service"
+    assert (pkg_dir / "__init__.py").is_file()
+    assert (pkg_dir / "core" / "__init__.py").is_file()
+    assert (pkg_dir / "core" / "domain" / "__init__.py").is_file()
+    assert (pkg_dir / "core" / "use_cases" / "__init__.py").is_file()
+    assert (pkg_dir / "core" / "ports" / "driving" / "__init__.py").is_file()
+    assert (pkg_dir / "core" / "ports" / "driven" / "__init__.py").is_file()
+    assert (pkg_dir / "adapters" / "driving" / "__init__.py").is_file()
+    assert (pkg_dir / "adapters" / "driven" / "__init__.py").is_file()
+    assert (pkg_dir / "bootstrap" / "__init__.py").is_file()
+
     # Assert rendered pyproject.toml contains valid rendered variables
     pyproject_content = (target_dir / "pyproject.toml").read_text()
     assert 'name = "hexagonal-service"' in pyproject_content
