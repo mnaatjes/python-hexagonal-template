@@ -140,6 +140,7 @@ dev = [
     # Linters & Hygiene
     "ruff>=0.7.0",
     "mypy>=1.13.0",
+    "djlint>=1.35.0",
     "pymarkdownlnt>=0.1.15",
     "pre-commit>=4.0.0",
 ]
@@ -162,6 +163,13 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.djlint]
+profile = "jinja"
+extension = "jinja"
+indent = 4
+max_line_length = 100
+preserve_blank_lines = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
