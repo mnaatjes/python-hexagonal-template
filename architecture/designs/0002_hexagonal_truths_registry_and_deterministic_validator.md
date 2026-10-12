@@ -37,7 +37,7 @@ graph TD
     Registry["architecture/rules/hexagonal_truths.yaml<br/>(Catalog & Truth Bindings)"]
     Validator["scripts/verify_truths.py<br/>(Deterministic Registry Validator)"]
 
-    subgraph Plane 1: Enforcement ["Plane 1: Enforcement Gates"]
+    subgraph Plane1["Plane 1: Enforcement Gates"]
         ImportLinter[".importlinter contracts"]
         Archon["pytest-archon test rules"]
         ASTLinter["AST visitor scripts"]
@@ -45,24 +45,25 @@ graph TD
         MypyStrict["mypy strict typing"]
     end
 
-    subgraph Plane 2: Documentation ["Plane 2: Operator Docs"]
+    subgraph Plane2["Plane 2: Operator Docs"]
         DiataxisDocs["template/docs/reference/hexagonal_rules.md"]
     end
 
-    subgraph Plane 3: LLM Skills ["Plane 3: Agent Directives"]
+    subgraph Plane3["Plane 3: Agent Directives"]
         GeminiRules["template/.gemini/rules/hexagonal_invariants.md"]
     end
 
-    subgraph Plane 4: Tests ["Plane 4: Compliance Tests"]
+    subgraph Plane4["Plane 4: Compliance Tests"]
         TestSuites["template/tests/architecture/*.py"]
     end
 
     Validator -->|Reads & Parses| Registry
-    Validator -->|Asserts Contracts| Plane 1: Enforcement
+    Validator -->|Asserts Contracts| Plane1
     Validator -->|Asserts Anchors| DiataxisDocs
     Validator -->|Asserts Directives| GeminiRules
     Validator -->|Parses AST Functions| TestSuites
 ```
+
 
 ### 2.2 YAML Registry Schema (`architecture/rules/hexagonal_truths.yaml`)
 
