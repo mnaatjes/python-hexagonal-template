@@ -184,15 +184,67 @@ Whenever `copier.yaml` properties, prompt defaults, or lifecycle tasks are modif
 3. **Execution Expectations:** If `_tasks` are modified (e.g., changes to lockfile commands or pre-commit installation), update Section 3 (What to Expect Upon Completion).
 4. **Topology Parity:** If the payload structure in `template/` changes (e.g. adding a new subpackage in `core/` or `adapters/`), update Section 4 (Expected Target Directory Structure).
 
+### 8. Upstream Pre-Commit Quality Gate (`.pre-commit-config.yaml`)
+
+To ensure unformatted Jinja syntax, malformed YAML manifests, or invalid Python code are never committed or released from Upstream, the repository root maintains its own strict `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^copier\.yaml$ # Avoid false positives on complex Copier tags
+      - id: check-toml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.3
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.35.2
+    hooks:
+      - id: djlint-reformat-jinja
+        files: ^template/.*\.jinja$
+      - id: djlint-jinja
+        files: ^template/.*\.jinja$
+```
+
+### 9. Upstream Deterministic Verification Runner (`scripts/verify.py` / `scripts/verify.sh`)
+
+To provide developers and CI pipelines with a single executable command to validate all Upstream quality gates, an Upstream verification script is maintained at `scripts/verify.py` (or executable shell wrapper `scripts/verify.sh`).
+
+The runner executes the following discrete verification stages in sequence:
+1. **Gate 1 (Pre-commit Hooks):** `uv run pre-commit run --all-files`
+2. **Gate 2 (Jinja Template Linting):** `uv run djlint template/ --check`
+3. **Gate 3 (Static Type Analysis):** `uv run mypy src/ tests/` (when typed tools exist)
+4. **Gate 4 (Template Generation Test Suite):** `uv run pytest tests/` (verifies test rendering via `pytest-copie`)
+
+Any non-zero exit code halts the runner immediately and fails the verification.
+
+### 10. Upstream Release Verification & Tagging Invariant
+
+Because Copier downstream updates depend directly on published Git tags, release creation must be protected by an immutable verification invariant:
+
+* **Pre-Tag Verification Requirement:** The version bump command (`bump-my-version bump <major|minor|patch>`) may **ONLY** be executed after the upstream verification script (`scripts/verify.py`) has passed with zero errors.
+* **Annotated Tagging Invariant:** Every release tag must be an annotated Git tag conforming to canonical PEP 440 / SemVer (`vX.Y.Z`).
+* **Tag Publication:** Tags must be pushed explicitly via `git push origin main --tags` to trigger Copier remote discovery.
+
 ---
 
 ## Consequences
 
 ### Positive
 * **Pristine Downstream Repositories:** Generated projects receive only the essential hexagonal structure and boundary enforcement gates.
-* **Deterministic Upstream Quality:** The template repository enforces its own strict linting (Ruff, PyMarkdown) and testing (Pytest-Copie) in an isolated root `.venv`.
+* **Deterministic Upstream Quality:** The template repository enforces its own strict linting (Ruff, PyMarkdown, djLint) and testing (Pytest-Copie) in an isolated root `.venv`.
 * **Zero Nested Environment Collisions:** Maintaining a single root `.venv` eliminates IDE confusion and language server path conflicts.
 * **Documentation Synchronization Guardrail:** Explicit protocol guarantees user-facing Diátaxis how-to guides never drift from `copier.yaml`.
+* **Zero Broken Releases:** Automated verification runner prevents publishing malformed or unrenderable template releases under Git tags.
 
 ### Negative / Trade-offs
 * **Git Tag Discipline Required:** Template releases cannot simply be merged into `main`; every upstream release must be tagged with an annotated Git tag (`vX.Y.Z`) via `bump-my-version` for Copier to detect it.
