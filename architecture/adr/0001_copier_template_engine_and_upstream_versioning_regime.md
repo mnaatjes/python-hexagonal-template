@@ -1,6 +1,6 @@
 ---
 title: "ADR 0001: Adoption of Copier Template Engine and Upstream-Exclusive Versioning Regime"
-status: "accepted"
+status: "adopted"
 date: "2026-10-12"
 tags: ["adr", "copier", "versioning", "bump-my-version", "governance"]
 ---
@@ -234,6 +234,20 @@ Because Copier downstream updates depend directly on published Git tags, release
 * **Pre-Tag Verification Requirement:** The version bump command (`bump-my-version bump <major|minor|patch>`) may **ONLY** be executed after the upstream verification script (`scripts/verify.py`) has passed with zero errors.
 * **Annotated Tagging Invariant:** Every release tag must be an annotated Git tag conforming to canonical PEP 440 / SemVer (`vX.Y.Z`).
 * **Tag Publication:** Tags must be pushed explicitly via `git push origin main --tags` to trigger Copier remote discovery.
+
+### 11. Dual-Plane Continuous Integration (CI) Architecture
+
+To eliminate reliance on the "developer honor system" and guarantee that pre-commit hooks cannot be bypassed (`git commit --no-verify`), the system defines two independent GitHub Actions CI pipelines:
+
+#### A. Upstream CI Pipeline (`.github/workflows/ci.yml`)
+* **Trigger:** Every `push` to `main` and all `pull_request` events targeting `main`.
+* **Execution:** Runs `scripts/verify.py` on `ubuntu-latest` against Python 3.13.
+* **Gate:** Automatically checks pre-commit hooks, formats Jinja templates via `djlint`, and runs the `pytest` template instantiation suite (`tests/test_template_generation.py`). PRs cannot be merged if template rendering fails.
+
+#### B. Downstream CI Pipeline Template (`template/.github/workflows/ci.yml.jinja`)
+* **Trigger:** Rendered into every downstream project scaffolded by Copier.
+* **Execution:** Sets up Python `{{ python_version }}` and Astral `uv`, synchronizes dependencies via `uv sync --all-extras`, and executes downstream `scripts/verify.py`.
+* **Gate:** Runs downstream boundary linters (`import-linter`, `pytest-archon`) on every pull request. If an LLM or developer imports external libraries into `core/domain/`, GitHub CI turns red and blocks merging.
 
 ---
 

@@ -1,1 +1,51 @@
-# Upstream pyproject.toml placeholder
+[project]
+name = "python-hexagonal-template"
+version = "0.1.0"
+description = "Production-grade Copier template for Python Hexagonal Architecture"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "copier>=9.0.0",
+    "bump-my-version>=0.28.0",
+    "pytest>=8.0.0",
+    "pytest-copie>=0.2.0",
+    "ruff>=0.7.3",
+    "mypy>=1.13.0",
+    "djlint>=1.35.2",
+    "pymarkdownlnt>=0.1.15",
+    "pre-commit>=4.0.0",
+]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = true
+tag_name = "v{new_version}"
+commit_message = "chore(release): bump version to {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.djlint]
+profile = "jinja"
+extension = "jinja"
+indent = 4
+max_line_length = 100
+preserve_blank_lines = true
+ignore = "H006,H030,H031,T002"
+exclude = "template/\\.github/.*\\.jinja"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
