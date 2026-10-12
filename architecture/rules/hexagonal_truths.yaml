@@ -1,0 +1,57 @@
+schema_version: "1.0"
+
+enforcement_catalog:
+  import_linter:
+    description: "Static import graph contracts via .importlinter"
+    config_file: "template/.importlinter"
+  pytest_archon:
+    description: "Fluent architectural layer assertion tests"
+    test_dir: "template/tests/architecture"
+  ast_visitor:
+    description: "AST visitor script detecting unauthorized syntax or calls"
+    script_dir: "template/scripts"
+  runtime_reflection:
+    description: "Runtime boundary introspection eliminating object tunneling"
+    helper_path: "template/tests/helpers/boundary_reflection.py"
+  strict_typing:
+    description: "Mypy strict structural subtyping and protocol compliance"
+    config_file: "template/pyproject.toml.jinja"
+
+truths:
+  - id: "HEXA-TRUTH-01"
+    name: "Pure Core Domain Isolation"
+    summary: "The core domain must never import external infrastructure, databases, frameworks, or driving adapters."
+    enforcements:
+      - mechanism: "import_linter"
+        contract_name: "core_domain_isolation"
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_core_domain_has_zero_external_dependencies"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-01"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-01"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_core_domain_has_zero_external_dependencies"
+
+  - id: "HEXA-TRUTH-02"
+    name: "Inward Dependency Direction"
+    summary: "Dependencies must only point inward toward the domain; adapters depend on ports, never vice versa."
+    enforcements:
+      - mechanism: "import_linter"
+        contract_name: "inward_dependency_direction"
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_dependencies_point_strictly_inward"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-02"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-02"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_dependencies_point_strictly_inward"
