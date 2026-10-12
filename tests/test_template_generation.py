@@ -1,5 +1,6 @@
 """Automated template generation test suite for python-hexagonal-template."""
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -9,9 +10,11 @@ def test_template_instantiation_with_defaults(tmp_path: Path) -> None:
     repo_root = Path(__file__).parent.parent
     target_dir = tmp_path / "test-hexagonal-service"
 
+    copier_bin = shutil.which("copier") or str(repo_root / ".venv" / "bin" / "copier")
+
     # Run copier programmatically without interactive prompts
     cmd = [
-        str(repo_root / ".venv" / "bin" / "copier"),
+        copier_bin,
         "copy",
         str(repo_root),
         str(target_dir),
