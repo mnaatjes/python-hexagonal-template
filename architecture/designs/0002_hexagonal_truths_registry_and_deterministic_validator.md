@@ -138,8 +138,8 @@ sequenceDiagram
         end
     end
 
-    alt All planes validated
-        Validator-->>Runner: Exit 0 (All Truths Mechanically Bound)
+    alt All planes validated OR truths list empty
+        Validator-->>Runner: Exit 0 (All Truths Mechanically Bound or Clean Greenfield)
     else Any missing link
         Validator-->>Runner: Exit 1 (Print missing plane diagnostics)
     end
@@ -150,7 +150,7 @@ sequenceDiagram
 ## 4. Implementation Specifications
 
 ### 4.1 Validator Implementation (`scripts/verify_truths.py`)
-A standalone Python script executing standard AST and file introspection:
+A standalone Python script executing standard AST and file introspection with empty-state tolerance:
 
 ```python
 #!/usr/bin/env python3
@@ -173,6 +173,10 @@ def validate_truth_chain() -> int:
     data = yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
     catalog = data.get("enforcement_catalog", {})
     truths = data.get("truths", [])
+
+    if not truths:
+        print("[INFO] Registry truths list is empty (clean greenfield state). Validation passed.")
+        return 0
 
     errors: list[str] = []
 
@@ -224,7 +228,13 @@ if __name__ == "__main__":
     sys.exit(validate_truth_chain())
 ```
 
-### 4.2 Upstream Agent Workflow Skill (`.gemini/skills/hexagonal-truth-authoring/`)
+### 4.2 Dual-Gate Pipeline Wiring & Empty-State Tolerance
+To ensure no architectural invariants are added or altered without quad-plane backing, `verify_truths.py` is wired into two distinct quality gates:
+1. **Pre-Commit Hook (`.pre-commit-config.yaml`):** Configured as a local pre-commit hook targeting `architecture/rules/hexagonal_truths.yaml` and related paths, running prior to commit creation.
+2. **CI Prerequisite Gate 0 (`scripts/verify.py` & `.github/workflows/ci.yml`):** Wired as Gate 0 in `scripts/verify.py`, executing before linting or unit tests.
+3. **Empty-State Tolerance:** When `truths: []` is empty, `verify_truths.py` outputs a clean pass (exit code 0). Unrelated PRs (e.g. documentation, CI configuration, template scaffolding) are never blocked by the validator.
+
+### 4.3 Upstream Agent Workflow Skill (`.gemini/skills/hexagonal-truth-authoring/`)
 To eliminate LLM alignment drift and guarantee full realization of every newly declared truth, the Upstream environment equips coding assistants with a dedicated Antigravity skill:
 * **Trigger Directive:** `.gemini/rules/hexagonal_truth_governance.md` routes any request regarding adding or modifying architectural truths to `.gemini/skills/hexagonal-truth-authoring/SKILL.md`.
 * **Execution Flow:** The skill mandates a 5-phase sequential playbook:
@@ -234,11 +244,17 @@ To eliminate LLM alignment drift and guarantee full realization of every newly d
   4. **Phase 4 (Deterministic Verification):** Execute `scripts/verify_truths.py` and `scripts/verify.py` asserting exit code 0.
   5. **Phase 5 (Git & PR):** Commit, push, and open Pull Request.
 
+### 4.4 Upstream Versioning & Release Governance Proviso
+Execution of `bump-my-version` in the Upstream repository is strictly relegated to the `main` branch:
+* **Feature & Architectural Branches:** Version bumps and git release tags are strictly prohibited on working branches (e.g. `docs/`, `feat/`, `fix/`).
+* **Release Cadence:** `bump-my-version bump [patch|minor|major]` must be invoked exclusively after pull requests are merged into `main` and verified by upstream CI.
+
 ---
 
 ## 5. Phased Implementation Plan
 
 - [ ] **Phase 1: Registry Foundation:** Create `architecture/rules/hexagonal_truths.yaml` defining the 5-tool catalog and initial truths (`HEXA-TRUTH-01` through `HEXA-TRUTH-05`).
-- [ ] **Phase 2: Validator Runner:** Implement `scripts/verify_truths.py` and wire into `scripts/verify.py`.
+- [ ] **Phase 2: Validator Runner & Dual-Gate Wiring:** Implement `scripts/verify_truths.py` with empty-state tolerance and wire into `scripts/verify.py` and `.pre-commit-config.yaml`.
 - [ ] **Phase 3: Payload Integration:** Provide initial starter documents (`template/docs/reference/hexagonal_rules.md`, `template/.gemini/rules/hexagonal_invariants.md`, and `template/tests/architecture/test_boundaries.py`).
 - [ ] **Phase 4: CI Verification & Push:** Run `scripts/verify.py` locally and in GitHub Actions CI to assert 100% compliance.
+- [ ] **Phase 5: Release on Main:** Execute `bump-my-version` exclusively on `main` following PR merge.

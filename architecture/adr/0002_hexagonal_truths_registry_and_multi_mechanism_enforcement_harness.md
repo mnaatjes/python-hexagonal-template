@@ -77,17 +77,27 @@ The registry defines:
   * `agent_skill`: Path and anchor string in `template/.gemini/rules/` or `SKILL.md`.
   * `verification_tests`: Paths and test function names in `template/tests/`.
 
-### 4. Declared-Binding Integrity Rule (`scripts/verify_truths.py`)
-A deterministic validator script (`scripts/verify_truths.py`) is added as Gate 0 in the CI pipeline:
+### 4. Declared-Binding Integrity Rule & Pipeline Wiring (`scripts/verify_truths.py`)
+A deterministic validator script (`scripts/verify_truths.py`) is wired directly into the repository quality pipeline across two gates:
+
+#### A. Dual-Gate Wiring
+1. **Pre-Commit Hook Gate (`.pre-commit-config.yaml`):** Configured as a local pre-commit hook triggering automatically whenever `architecture/rules/hexagonal_truths.yaml` or template files are staged. Prevents committing broken or incomplete truth declarations.
+2. **CI Pipeline Gate 0 (`scripts/verify.py` & `.github/workflows/ci.yml`):** Executed as the initial prerequisite check before running linters or unit tests. Any missing link immediately fails the pull request in GitHub Actions.
+
+#### B. Verification Invariants & Empty-State Tolerance
 * **Catalog Validation:** Asserts every mechanism declared in a truth exists in `enforcement_catalog`.
 * **Existence Verification:** Asserts that every declared contract, documentation file, anchor, and test function physically exists on disk.
-* **Minimum Threshold:** Asserts that every registered truth binds to **at least one** active enforcement mechanism.
+* **Minimum Threshold:** For every truth entry present, asserts that it binds to **at least one** active enforcement mechanism.
+* **Empty-State Tolerance:** When the registry contains a valid `enforcement_catalog` but `truths: []` is empty (during greenfield setup), the validator exits with code 0. It never blocks unrelated documentation or infrastructure PRs that do not alter architectural rules.
 
 ### 5. Upstream Agent Authoring Skill (`.gemini/skills/hexagonal-truth-authoring/`)
 To eliminate LLM alignment drift during the authoring of new architectural rules, the Upstream repository equips coding agents with a dedicated skill:
 * **Playbook:** `.gemini/skills/hexagonal-truth-authoring/SKILL.md` orchestrates a strict 5-phase execution flow (Inception & Catalog Selection $\to$ Quad-Plane Lockstep Authoring $\to$ Registry Binding $\to$ Gate Verification $\to$ Packaging).
 * **System Directive:** `.gemini/rules/hexagonal_truth_governance.md` triggers this skill whenever the operator asks to establish or modify a Hexagonal truth.
 * **Enforcement:** The agent is instructed to run `scripts/verify_truths.py` locally before proposing any changes.
+
+### 6. Upstream Versioning & Release Governance
+Execution of `bump-my-version` in the Upstream repository is strictly relegated to the `main` branch. Feature, fix, and architectural branches (including truth-definition branches) must never invoke version bumps or generate release tags. Releases are triggered exclusively on `main` following PR merge and successful dual-gate pipeline verification.
 
 ---
 
@@ -98,6 +108,7 @@ To eliminate LLM alignment drift during the authoring of new architectural rules
 * **Autonomous LLM Governance:** Subagents and coding models receive identical, synchronized directives matching the active linter contracts.
 * **Flexible Multi-Tool Binding:** Complex invariants can bind multiple tools (e.g. `import-linter` + `pytest-archon`), while simpler rules bind only what is necessary.
 * **Self-Verifying CI:** The registry validator script immediately halts builds if an engineer or model introduces a truth without completing all four planes.
+* **Protected Release Stream:** Relegating `bump-my-version` strictly to `main` prevents fragmented version bumps, duplicate tags, and dirty release states across development branches.
 
 ### Negative / Trade-offs
 * **Initial Authoring Overhead:** Declaring a new truth requires completing documentation, rules, tests, and YAML entries in lockstep.
