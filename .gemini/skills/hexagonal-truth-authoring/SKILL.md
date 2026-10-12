@@ -66,3 +66,13 @@ Append the complete structured record to `architecture/rules/hexagonal_truths.ya
 ### Phase 5: Packaging & Pull Request
 1. Commit all files with message: `feat(truth): implement HEXA-TRUTH-NN <name> across all 4 planes`.
 2. Push feature branch and open GitHub Pull Request.
+
+---
+
+## Key Context References
+
+* **Authoritative Registry:** [architecture/rules/hexagonal_truths.yaml](file:///home/michael/src/github.com/mnaatjes/python-hexagonal-template/architecture/rules/hexagonal_truths.yaml)
+* **Governing ADR:** [ADR 0002: Adoption of Hexagonal Truths Registry](file:///home/michael/src/github.com/mnaatjes/python-hexagonal-template/architecture/adr/0002_hexagonal_truths_registry_and_multi_mechanism_enforcement_harness.md)
+* **Technical Specification:** [SDD-0002: Deterministic Validator & Dual-Gate Wiring](file:///home/michael/src/github.com/mnaatjes/python-hexagonal-template/architecture/designs/0002_hexagonal_truths_registry_and_deterministic_validator.md)
+* **Literature Reference Base:** [ed-telemetry Hexagonal References](file:///home/michael/src/github.com/mnaatjes/ed-telemetry/architecture/notes/hexagonal_architecture_references.md)
+* **Foundational Specification:** Alistair Cockburn, *Hexagonal Architecture (Ports and Adapters)*: [https://alistair.cockburn.us/hexagonal-architecture/](https://alistair.cockburn.us/hexagonal-architecture/)
