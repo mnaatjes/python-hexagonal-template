@@ -55,3 +55,20 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_dependencies_point_strictly_inward"
+
+  - id: "HEXA-TRUTH-03"
+    name: "Port Abstraction & Protocol Integrity"
+    summary: "Ports must be defined as abstract contracts (typing.Protocol or abc.ABC); adapters satisfy them without transport leakage."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_are_abstract_protocols_or_abcs"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-03"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-03"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_are_abstract_protocols_or_abcs"

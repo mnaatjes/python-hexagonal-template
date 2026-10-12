@@ -2,4 +2,4 @@
 - [x] Update `architecture/rules/hexagonal_truths.yaml` property "schema_version" to be dependent on bump-my-version SSoT
 - [x] Determine if the src/ directory topology MUST be established for enforcement mechanisms to work (Resolved: Topology A established)
 - [ ] When scripts/ enforcement required, should we architect downstream scripts/ directory with a lib/ sub-dir for atomized tests?
-- [ ] For abstract ports, contracts, and interfaces - what python packages will we use, what will we permit the user to implement?
+- [x] For abstract ports, contracts, and interfaces - what python packages will we use, what will we permit the user to implement? (Resolved: stdlib typing.Protocol / abc.ABC codified in ADR-0002 Section 9 and HEXA-TRUTH-03)

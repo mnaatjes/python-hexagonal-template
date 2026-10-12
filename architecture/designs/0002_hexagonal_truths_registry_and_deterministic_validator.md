@@ -278,6 +278,18 @@ Execution of `bump-my-version` in the Upstream repository is strictly relegated 
 * **Feature & Architectural Branches:** Version bumps and git release tags are strictly prohibited on working branches (e.g. `docs/`, `feat/`, `fix/`).
 * **Release Cadence:** `bump-my-version bump [patch|minor|major]` must be invoked exclusively after pull requests are merged into `main` and verified by upstream CI.
 
+### 4.8 Port Abstraction Standards & Permitted Interface Tooling
+The template strictly enforces Python standard library mechanisms for all port declarations:
+* **Permitted Constructs:**
+  * `typing.Protocol` with `@typing.runtime_checkable` (primary standard for structural typing).
+  * `abc.ABC` with `@abc.abstractmethod` (secondary standard for nominal inheritance).
+* **Prohibited Constructs:**
+  * Third-party interface frameworks (`zope.interface`, `interface-meta`).
+  * Direct inclusion of infrastructure types (e.g. `Request`, `Response`, `Session`, `Client`) in port signatures.
+* **Multi-Mechanism Enforcement Binding (`HEXA-TRUTH-03`):**
+  * `strict_typing`: Static type checking (`mypy --strict`) asserting adapter adherence to port protocols.
+  * `pytest_archon`: Boundary assertions verifying that `core/ports/` does not import adapter packages.
+
 ---
 
 ## 5. Phased Implementation Plan

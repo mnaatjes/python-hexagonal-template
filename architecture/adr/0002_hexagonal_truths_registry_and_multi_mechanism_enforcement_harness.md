@@ -134,6 +134,16 @@ template/src/{{package_name}}/
 └── bootstrap/         # Composition root, dependency injection wiring
 ```
 
+### 9. Port Abstraction Standards & Permitted Interface Tooling
+To eliminate framework bloat and preserve language-level portability, interface tooling is strictly codified across Upstream design standards and Downstream enforcement:
+* **Permitted Port Constructs (Standard Library Zero-Dependency):**
+  1. **Primary Standard:** `typing.Protocol` decorated with `@typing.runtime_checkable` for structural subtyping (duck typing verified statically via `mypy --strict`).
+  2. **Secondary Standard:** `abc.ABC` with `@abc.abstractmethod` for nominal inheritance hierarchies where explicit base class polymorphism is desired.
+* **Prohibited Constructs in `core/ports/`:**
+  * Third-party interface frameworks (`zope.interface`, `interface-meta`) are prohibited to minimize external dependencies.
+  * Concrete classes, standalone untyped functions, and transport/infrastructure classes (e.g. `FastAPI.Request`, `SQLAlchemy.Session`, `boto3.client`) are strictly forbidden in port method signatures.
+* **Binding Invariant:** Enforced downstream mechanically via `HEXA-TRUTH-03` combining `strict_typing` (`mypy --strict`) and `pytest_archon` / AST inspection.
+
 ---
 
 ## Consequences
