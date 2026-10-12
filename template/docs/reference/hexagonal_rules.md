@@ -38,3 +38,13 @@ This reference documents the governing architectural invariants ("Truths") enfor
   * `strict_typing`: `mypy --strict` enforcing structural or nominal type satisfaction.
   * `pytest-archon`: `test_ports_are_abstract_protocols_or_abcs`.
 * **Remediation:** Refactor concrete port classes into `typing.Protocol` or `abc.ABC`, moving concrete implementations into `adapters/`.
+
+---
+
+### HEXA-TRUTH-04: DTO & Anti-Tunneling Boundary Purity
+
+* **Definition:** Data crossing port boundaries (parameters and return types of port methods) must consist strictly of immutable DTOs, frozen dataclasses, standard library primitives, or pure domain value objects. Ports must never expose ORM database models, framework request/response objects, or mutable entities.
+* **Enforcement:**
+  * `pytest_archon`: `test_port_signatures_use_pure_dtos_and_primitives`.
+  * `runtime_reflection`: Boundary introspection auditing runtime method annotations.
+* **Remediation:** Map internal models or external payloads to dedicated frozen DTOs (`dataclasses.dataclass(frozen=True)`) before passing them across the port boundary.

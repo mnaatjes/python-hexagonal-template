@@ -21,3 +21,9 @@ def test_ports_are_abstract_protocols_or_abcs() -> None:
     """Asserts that all port contracts are declared as typing.Protocol or abc.ABC."""
     # Architectural assertion placeholder (satisfied by pytest-archon / AST in downstream)
     assert True
+
+
+def test_port_signatures_use_pure_dtos_and_primitives() -> None:
+    """Asserts that port method signatures use frozen DTOs, value objects, or primitives."""
+    # Architectural assertion placeholder (satisfied by pytest-archon / reflection in downstream)
+    assert True

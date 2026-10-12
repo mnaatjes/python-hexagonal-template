@@ -1,0 +1,16 @@
+"""Driving (inbound / primary) port contract for health checking."""
+
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+from {{ package_name }}.core.domain.health import SystemHealth
+
+
+@runtime_checkable
+class GetHealthPort(Protocol):
+    """Primary port implemented by use cases or application services."""
+
+    def check_health(self) -> SystemHealth:
+        """Evaluates and returns the current operational health of the service."""
+        ...

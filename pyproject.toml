@@ -51,7 +51,7 @@ indent = 4
 max_line_length = 100
 preserve_blank_lines = true
 ignore = "H006,H030,H031,T002"
-exclude = "template/\\.github/.*\\.jinja"
+exclude = "template/\\.github/.*\\.jinja|template/src/.*\\.jinja"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
