@@ -95,6 +95,61 @@ def test_downstream_negative_mutation_port_dto_purity(rendered_downstream: Path)
     assert "adapters.driving" in content
 
 
+def test_downstream_health_use_case_and_probe_exist(rendered_downstream: Path) -> None:
+    """Positive test: verifies that CheckHealthUseCase and OsSystemProbeAdapter render cleanly."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    use_case = pkg_dir / "core" / "use_cases" / "check_health.py"
+    probe_adapter = pkg_dir / "adapters" / "driven" / "system_probe.py"
+
+    assert use_case.is_file()
+    assert probe_adapter.is_file()
+
+    uc_content = use_case.read_text(encoding="utf-8")
+    assert (
+        "from hexagonal_service.core.domain.health import HealthStatus, SystemHealth" in uc_content
+    )
+    assert "{{" not in uc_content
+
+
+def test_downstream_negative_mutation_lifecycle_pollution(rendered_downstream: Path) -> None:
+    """Negative test: asserts that injecting threading into use case fails boundary tests."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    use_case = pkg_dir / "core" / "use_cases" / "check_health.py"
+
+    # Inject threading into use case
+    use_case.write_text(
+        "import threading\n\n"
+        "class CheckHealthUseCase:\n"
+        "    def run_worker(self) -> None:\n"
+        "        t = threading.Thread()\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    # Must fail because test_domain_and_use_cases_have_zero_lifecycle_pollution catches threading
+    assert res.returncode != 0
+    err_needle = "imports lifecycle module: threading"
+    assert err_needle in res.stdout or err_needle in res.stderr
+
+
 def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) -> None:
     """Verifies that downstream test_boundaries.py executes and passes on pristine render."""
     repo_root = Path(__file__).parent.parent
