@@ -1,1 +1,48 @@
-# Copier configuration placeholder
+_subdirectory: template
+_min_copier_version: "9.0.0"
+_answers_file: ".copier-answers.yml"
+
+project_name:
+  type: str
+  help: "Human-readable name of the application (e.g., 'Order Management Service')"
+  default: "Hexagonal Service"
+
+project_slug:
+  type: str
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+
+package_name:
+  type: str
+  default: "{{ project_name | lower | replace(' ', '_') | replace('-', '_') }}"
+
+project_description:
+  type: str
+  help: "Brief description of the bounded context"
+  default: "Hexagonally architected service"
+
+author_name:
+  type: str
+  default: "Engineering Team"
+
+author_email:
+  type: str
+  default: "engineering@example.com"
+
+python_version:
+  type: str
+  default: "3.12"
+  choices:
+    - "3.12"
+    - "3.13"
+
+include_architecture_governance:
+  type: bool
+  default: true
+  help: "Include baseline architecture/ directory and starter ADRs in downstream project"
+
+_tasks:
+  - "git init"
+  - "uv sync --all-extras"
+  - "uv run pre-commit install"
+  - "git add -A"
+  - "git commit -m 'chore: initial project scaffold via python-hexagonal-template'"

@@ -1,6 +1,6 @@
 ---
 title: "SDD-0001: Copier Template Engine, Upstream Tooling Harness, and Verification Pipeline"
-status: "in-progress"
+status: "adopted"
 authors: ["@mnaatjes"]
 reviewers: ["Systems Engineering Team"]
 created_at: "2026-10-12"

@@ -1,6 +1,6 @@
 ---
 title: "ADR 0001: Adoption of Copier Template Engine and Upstream-Exclusive Versioning Regime"
-status: "accepted"
+status: "adopted"
 date: "2026-10-12"
 tags: ["adr", "copier", "versioning", "bump-my-version", "governance"]
 ---
