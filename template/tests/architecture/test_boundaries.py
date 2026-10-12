@@ -101,3 +101,35 @@ def test_port_signatures_use_pure_dtos_and_primitives() -> None:
                 assert not node.module.startswith(
                     f"{pkg_name}.adapters"
                 ), f"Port file {py_file.name} imports adapter type: {node.module}"
+
+
+def test_domain_and_use_cases_have_zero_lifecycle_pollution() -> None:
+    """Asserts that core domain and use cases do not control thread or process lifecycles."""
+    pkg_root = _get_package_root()
+    core_dirs = [pkg_root / "core" / "domain", pkg_root / "core" / "use_cases"]
+    forbidden_modules = {"threading", "multiprocessing", "subprocess", "signal"}
+
+    for core_dir in core_dirs:
+        for py_file in core_dir.rglob("*.py"):
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        assert (
+                            alias.name not in forbidden_modules
+                        ), f"Core file {py_file.name} imports lifecycle module: {alias.name}"
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    assert (
+                        node.module.split(".")[0] not in forbidden_modules
+                    ), f"Core file {py_file.name} imports lifecycle module: {node.module}"
+                elif isinstance(node, ast.Call):
+                    # Flag asyncio.run()
+                    if (
+                        isinstance(node.func, ast.Attribute)
+                        and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "asyncio"
+                        and node.func.attr == "run"
+                    ):
+                        raise AssertionError(
+                            f"Core file {py_file.name} executes asyncio.run() lifecycle control."
+                        )

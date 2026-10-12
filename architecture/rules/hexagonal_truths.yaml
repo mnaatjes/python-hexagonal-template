@@ -89,3 +89,20 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_port_signatures_use_pure_dtos_and_primitives"
+
+  - id: "HEXA-TRUTH-05"
+    name: "Zero Lifecycle Pollution in Domain"
+    summary: "Domain entities and use cases must never control execution lifecycles, threads, event loops, or signal handlers."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_and_use_cases_have_zero_lifecycle_pollution"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-05"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-05"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_and_use_cases_have_zero_lifecycle_pollution"

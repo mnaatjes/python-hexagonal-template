@@ -27,3 +27,7 @@ When authoring or modifying code within this service, coding assistants must str
 ## HEXA-TRUTH-04: DTO & Anti-Tunneling Boundary Purity
 * Port method parameters and return types must be pure immutable DTOs, frozen dataclasses, or primitives.
 * Never pass ORM models, framework payloads, or raw mutable entities directly across port interfaces.
+
+## HEXA-TRUTH-05: Zero Lifecycle Pollution in Domain
+* Never instantiate threads, process workers, or event loops (`asyncio.run()`, `threading.Thread`) inside `core/domain/` or `core/use_cases/`.
+* Lifecycles, daemon loops, and signal handling belong strictly in driving adapters or bootstrap entrypoints.

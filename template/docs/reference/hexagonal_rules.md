@@ -48,3 +48,12 @@ This reference documents the governing architectural invariants ("Truths") enfor
   * `pytest_archon`: `test_port_signatures_use_pure_dtos_and_primitives`.
   * `runtime_reflection`: Boundary introspection auditing runtime method annotations.
 * **Remediation:** Map internal models or external payloads to dedicated frozen DTOs (`dataclasses.dataclass(frozen=True)`) before passing them across the port boundary.
+
+---
+
+### HEXA-TRUTH-05: Zero Lifecycle Pollution in Domain
+
+* **Definition:** The domain and use case interactors represent pure business rules and data transformations. They must never control process lifecycles, instantiate background threads or worker loops, manage OS signal listeners, or invoke event loops (`asyncio.run()`). Lifecycles and thread management belong strictly to Driving Adapters, Driven Adapters, or Bootstrap entrypoints.
+* **Enforcement:**
+  * `pytest_archon`: `test_domain_and_use_cases_have_zero_lifecycle_pollution`.
+* **Remediation:** Move event loops, concurrency management, and thread worker lifecycles into the driving adapter or composition root (`bootstrap/`).
