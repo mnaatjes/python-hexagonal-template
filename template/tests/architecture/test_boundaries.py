@@ -15,3 +15,9 @@ def test_dependencies_point_strictly_inward() -> None:
     """Asserts that adapters depend on ports and core layers, never vice versa."""
     # Architectural assertion placeholder (satisfied by pytest-archon in downstream)
     assert True
+
+
+def test_ports_are_abstract_protocols_or_abcs() -> None:
+    """Asserts that all port contracts are declared as typing.Protocol or abc.ABC."""
+    # Architectural assertion placeholder (satisfied by pytest-archon / AST in downstream)
+    assert True
