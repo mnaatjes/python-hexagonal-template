@@ -23,3 +23,7 @@ When authoring or modifying code within this service, coding assistants must str
 ## HEXA-TRUTH-03: Port Abstraction & Protocol Integrity
 * Every port declared in `core/ports/` must be an abstract interface: use `typing.Protocol` with `@typing.runtime_checkable` or `abc.ABC` with `@abc.abstractmethod`.
 * Never declare concrete port classes, functions, or import infrastructure/transport types (e.g. `Request`, `Session`) in port interfaces.
+
+## HEXA-TRUTH-04: DTO & Anti-Tunneling Boundary Purity
+* Port method parameters and return types must be pure immutable DTOs, frozen dataclasses, or primitives.
+* Never pass ORM models, framework payloads, or raw mutable entities directly across port interfaces.
