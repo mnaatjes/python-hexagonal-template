@@ -67,3 +67,26 @@ This document establishes the authoritative vocabulary, system planes, and bound
 ### 5. Architectural Scaffolding vs Operational Code
 * **Upstream Architectural Documentation (`architecture/`):** The immutable records that justify *why* this template enforces specific hexagonal rules (e.g., ADR documenting the decision to forbid direct repository imports in domain models).
 * **Downstream Starter Architecture (`template/architecture/`):** Optional baseline scaffolding (stubs, schemas, and ADR-0001) that downstream teams can activate to begin documenting their own domain-specific decisions.
+
+---
+
+## Hexagonal Boundary & Invariant Definitions
+
+### 6. Dependency Direction
+* **Definition:** The topological direction in which compile-time source code references (`import`, `from ... import`, type hints) point within the codebase.
+* **Invariant:** In Hexagonal Architecture, dependency direction is decoupled from runtime control flow. While control flow may travel from an adapter into core and back out to a database, source code dependencies must point in one coordinated direction.
+
+### 7. Inward Dependency
+* **Definition:** Any import or type reference where an outer layer (such as `adapters/driving/`, `adapters/driven/`, or `bootstrap/`) depends on an inner layer (such as `core/ports/`, `core/use_cases/`, or `core/domain/`).
+* **Invariant:** Outer components depend on inner abstractions. Inner abstractions are completely unaware of outer concrete implementations.
+
+### 8. Inward Dependency Direction (Dependency Inversion Principle)
+* **Definition:** The foundational architectural rule stipulating that all source code dependencies must flow strictly inward toward the core domain.
+* **Topology:**
+  $$\text{Adapters (Outer)} \longrightarrow \text{Ports (Boundary)} \longleftarrow \text{Use Cases (Application)} \longrightarrow \text{Domain (Center)}$$
+* **Invariant:** Core never imports outer adapters. Outbound operations (database queries, network requests) invert their dependencies: Core defines an abstract driven port, and the outer adapter implements it.
+
+### 9. Lifecycle Pollution
+* **Definition:** The anti-pattern of embedding long-running process lifecycles, event loops, thread orchestration, OS process spawning, or hardware signal handling inside domain entities or use-case interactors.
+* **Prohibited Constructs in Core:** Calling `asyncio.run()`, instantiating `threading.Thread` or `multiprocessing.Process`, invoking `subprocess.run()`, or registering listeners with `signal.signal()`.
+* **Invariant:** Core use cases and domain models represent pure, instantaneous transformations and evaluations. Execution loops, daemon processes, connection lifecycles, and shutdown hooks belong strictly to driving adapters, driven adapters, or the composition root (`bootstrap/`).
