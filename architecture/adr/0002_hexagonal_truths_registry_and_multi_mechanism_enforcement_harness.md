@@ -1,6 +1,6 @@
 ---
 title: "ADR 0002: Adoption of Hexagonal Truths Registry and Multi-Mechanism Enforcement Harness"
-status: "proposed"
+status: "adopted"
 date: "2026-10-12"
 tags: ["adr", "governance", "hexagonal-architecture", "enforcement", "registry"]
 ---
@@ -60,11 +60,15 @@ Every declared Hexagonal Architecture invariant (`HEXA-TRUTH-NN`) must maintain 
 ### 2. The Authoritative 5-Tool Enforcement Catalog
 The registry recognizes five distinct enforcement capabilities available in the template ecosystem:
 
-1. **`import_linter`:** Static import graph contracts via `.importlinter` ensuring inward-only dependency directions and forbidding outer imports in `core/domain/`.
-2. **`pytest_archon`:** Fluent architectural layer assertions in `pytest` reporting line-by-line violation traces.
-3. **`ast_visitor`:** Python Abstract Syntax Tree scanners (`ast.NodeVisitor`) detecting unauthorized method calls (e.g. `.start()`, `.stop()`), unauthorized instantiations, or forbidden attribute traversals.
-4. **`runtime_reflection`:** Introspection harnesses (`inspect`, `get_type_hints`) auditing runtime object graphs across boundaries to eliminate **Transitive Object Tunneling** and guarantee DTO return purity.
-5. **`strict_typing`:** Static type analysis (`mypy` strict) verifying that Driving Adapters strictly invoke `DrivingPort` contracts and Driven Adapters strictly satisfy `DrivenPort` specifications.
+1. **`import_linter`:** Static import graph contracts via `.importlinter` ensuring inward-only dependency directions and forbidding outer imports in `core/domain/` (declared downstream in `template/pyproject.toml.jinja` via `import-linter`).
+2. **`pytest_archon`:** Fluent architectural layer assertions in `pytest` reporting line-by-line violation traces (declared downstream in `template/pyproject.toml.jinja` via `pytest-archon`).
+3. **`ast_visitor`:** Python Abstract Syntax Tree scanners (`ast.NodeVisitor`) detecting unauthorized method calls (e.g. `.start()`, `.stop()`), unauthorized instantiations, or forbidden attribute traversals (standard library zero-dependency).
+4. **`runtime_reflection`:** Introspection harnesses (`inspect`, `get_type_hints`) auditing runtime object graphs across boundaries to eliminate **Transitive Object Tunneling** and guarantee DTO return purity (standard library zero-dependency).
+5. **`strict_typing`:** Static type analysis (`mypy` strict) verifying that Driving Adapters strictly invoke `DrivingPort` contracts and Driven Adapters strictly satisfy `DrivenPort` specifications (declared downstream in `template/pyproject.toml.jinja` and upstream in `pyproject.toml` via `mypy`).
+
+#### Dependency Onboarding Topology
+* **Downstream Payload (`template/pyproject.toml.jinja`):** Packages responsible for enforcing hexagonal boundaries (`import-linter`, `pytest-archon`, `mypy`) are onboarded directly into the downstream project's `dev` optional-dependencies.
+* **Upstream Quality Harness (`pyproject.toml` & CI):** The upstream repository onboarding includes `pyyaml>=6.0.2` to support deterministic registry verification by `scripts/verify_truths.py` across local runs and GitHub Actions CI.
 
 ### 3. Registry Schema (`architecture/rules/hexagonal_truths.yaml`)
 The registry defines:

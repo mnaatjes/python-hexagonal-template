@@ -17,6 +17,7 @@ dev = [
     "djlint>=1.35.2",
     "pymarkdownlnt>=0.1.15",
     "pre-commit>=4.0.0",
+    "pyyaml>=6.0.2",
 ]
 
 [tool.bumpversion]
@@ -49,3 +50,4 @@ exclude = "template/\\.github/.*\\.jinja"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]

@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 # Locate binaries: prefer active virtualenv/system PATH, fallback to .venv/bin
 VENV_BIN = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".venv", "bin")
@@ -21,6 +22,10 @@ def get_bin(cmd_name: str) -> str:
 
 
 CHECKS = [
+    (
+        "Hexagonal truths quad-plane gate",
+        [sys.executable, str(Path(__file__).resolve().parent / "verify_truths.py")],
+    ),
     ("Pre-commit hooks", [get_bin("pre-commit"), "run", "--all-files"]),
     ("Jinja formatting & lint", [get_bin("djlint"), "template/", "--check"]),
     ("Unit and template tests", [get_bin("pytest"), "tests/"]),

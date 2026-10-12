@@ -1,6 +1,6 @@
 ---
 title: "SDD-0002: Hexagonal Truths Registry and Deterministic Multi-Mechanism Validator"
-status: "in-progress"
+status: "adopted"
 authors: ["@mnaatjes"]
 reviewers: ["Systems Engineering Team"]
 created_at: "2026-10-12"
@@ -234,7 +234,17 @@ To ensure no architectural invariants are added or altered without quad-plane ba
 2. **CI Prerequisite Gate 0 (`scripts/verify.py` & `.github/workflows/ci.yml`):** Wired as Gate 0 in `scripts/verify.py`, executing before linting or unit tests.
 3. **Empty-State Tolerance:** When `truths: []` is empty, `verify_truths.py` outputs a clean pass (exit code 0). Unrelated PRs (e.g. documentation, CI configuration, template scaffolding) are never blocked by the validator.
 
-### 4.3 Upstream Agent Workflow Skill (`.gemini/skills/hexagonal-truth-authoring/`)
+### 4.3 Dependency Onboarding & Tooling Deployment
+Dependency management spans both the template payload and the upstream harness:
+* **Downstream Template Payload (`template/pyproject.toml.jinja`):**
+  * `import-linter>=2.1`: Deployed in `dev` optional-dependencies for import graph enforcement.
+  * `pytest-archon>=0.0.6`: Deployed in `dev` optional-dependencies for layer isolation testing.
+  * `mypy>=1.13.0`: Deployed in `dev` optional-dependencies for static structural typing.
+  * `ast_visitor` & `runtime_reflection`: Implemented via Python standard library (`ast`, `inspect`, `typing`), introducing zero third-party dependencies.
+* **Upstream Quality Harness (`pyproject.toml` & `.github/workflows/ci.yml`):**
+  * `pyyaml>=6.0.2`: Added to `[project.optional-dependencies] dev` and the GitHub Actions CI workflow to support parsing and validating `hexagonal_truths.yaml` within `scripts/verify_truths.py`.
+
+### 4.4 Upstream Agent Workflow Skill (`.gemini/skills/hexagonal-truth-authoring/`)
 To eliminate LLM alignment drift and guarantee full realization of every newly declared truth, the Upstream environment equips coding assistants with a dedicated Antigravity skill:
 * **Trigger Directive:** `.gemini/rules/hexagonal_truth_governance.md` routes any request regarding adding or modifying architectural truths to `.gemini/skills/hexagonal-truth-authoring/SKILL.md`.
 * **Execution Flow:** The skill mandates a 5-phase sequential playbook:

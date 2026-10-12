@@ -1,1 +1,22 @@
-# Downstream import-linter contract placeholder
+[importlinter]
+root_packages =
+    core
+    adapters
+
+[importlinter:contract:core_domain_isolation]
+name = core_domain_isolation
+type = forbidden
+source_modules =
+    core.domain
+forbidden_modules =
+    adapters
+    external
+    frameworks
+
+[importlinter:contract:inward_dependency_direction]
+name = inward_dependency_direction
+type = layers
+layers =
+    adapters
+    core.application
+    core.domain
