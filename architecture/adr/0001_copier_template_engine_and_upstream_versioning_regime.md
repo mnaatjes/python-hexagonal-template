@@ -96,14 +96,95 @@ _tasks:
   - "git commit -m 'chore: initial project scaffold via python-hexagonal-template'"
 ```
 
+### 5. Virtual Environment & Dual-Manifest Regime
+
+To eliminate nested virtual environment collisions and keep IDE language servers unambiguous, the repository enforces a strict two-manifest, single-runtime architecture:
+
+#### A. Dual-Manifest Strategy
+1. **Upstream Root Manifest (`pyproject.toml`):**
+   * A static, non-rendered file.
+   * Defines dependencies required **strictly to develop, test, lint, and tag the template project itself**.
+   * Excludes application runtime dependencies (no FastAPI, SQLAlchemy, etc.).
+2. **Downstream Template Manifest (`template/pyproject.toml.jinja`):**
+   * A dynamic Jinja2 template.
+   * Renders into the user's project containing application metadata, hexagonal boundary enforcers (`import-linter`, `pytest-archon`), and standard dev tools (`ruff`, `pytest`).
+   * **Excludes** upstream authoring tools (`copier`, `bump-my-version`).
+
+#### B. Single Upstream Virtual Environment (`.venv/`)
+* During development inside `python-hexagonal-template`, exactly **one virtual environment** exists at the repository root, managed via `uv sync`.
+* No `.venv/` directory is created inside `template/`.
+* Testing the template payload is conducted by running `pytest` from the root environment, which invokes Copier programmatically to render instances into isolated temporary directories (`/tmp` or pytest `tmp_path`).
+* **Absolute Invariant:** `.venv/` is ignored by Git and is physically excluded from downstream copying. Downstream environments are created on-demand by the downstream host via `uv sync`.
+
+### 6. Upstream `pyproject.toml` Tooling Specification
+
+The upstream repository root `pyproject.toml` contains exclusively the tooling necessary to maintain the template repository and its quality gates:
+
+```toml
+[project]
+name = "python-hexagonal-template"
+version = "0.1.0"
+description = "Production-grade Copier template for Python Hexagonal Architecture"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    # Template Engine & Versioning
+    "copier>=9.0.0",
+    "bump-my-version>=0.28.0",
+    # Testing & Verification
+    "pytest>=8.0.0",
+    "pytest-copie>=0.2.0",
+    # Linters & Hygiene
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+    "pymarkdownlnt>=0.1.15",
+    "pre-commit>=4.0.0",
+]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = true
+tag_name = "v{new_version}"
+commit_message = "chore(release): bump version to {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+```
+
+### 7. Documentation Synchronization Protocol for `docs/how-to/`
+
+Whenever `copier.yaml` properties, prompt defaults, or lifecycle tasks are modified, the author must verify and synchronize [`docs/how-to/instantiate_hexagonal_project.md`](file:///home/michael/src/github.com/mnaatjes/python-hexagonal-template/docs/how-to/instantiate_hexagonal_project.md) within the same commit:
+
+1. **Prerequisite Check:** If upstream minimum Python or Copier versions change, update Section 1 (Prerequisites).
+2. **Prompts Alignment:** If a variable is added or renamed in `copier.yaml`, update Section 2 (Interactive Prompts).
+3. **Execution Expectations:** If `_tasks` are modified (e.g., changes to lockfile commands or pre-commit installation), update Section 3 (What to Expect Upon Completion).
+4. **Topology Parity:** If the payload structure in `template/` changes (e.g. adding a new subpackage in `core/` or `adapters/`), update Section 4 (Expected Target Directory Structure).
+
 ---
 
 ## Consequences
 
 ### Positive
 * **Pristine Downstream Repositories:** Generated projects receive only the essential hexagonal structure and boundary enforcement gates.
-* **Long-Term Maintainability:** Existing downstream services can pull updated linters, AST rules, or base interfaces via `copier update`.
-* **Autonomous Versioning:** Downstream applications start at version `0.1.0` (or their preferred scheme) completely decoupled from upstream template release numbers.
+* **Deterministic Upstream Quality:** The template repository enforces its own strict linting (Ruff, PyMarkdown) and testing (Pytest-Copie) in an isolated root `.venv`.
+* **Zero Nested Environment Collisions:** Maintaining a single root `.venv` eliminates IDE confusion and language server path conflicts.
+* **Documentation Synchronization Guardrail:** Explicit protocol guarantees user-facing Diátaxis how-to guides never drift from `copier.yaml`.
 
 ### Negative / Trade-offs
 * **Git Tag Discipline Required:** Template releases cannot simply be merged into `main`; every upstream release must be tagged with an annotated Git tag (`vX.Y.Z`) via `bump-my-version` for Copier to detect it.
