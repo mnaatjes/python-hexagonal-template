@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -92,3 +93,27 @@ def test_downstream_negative_mutation_port_dto_purity(rendered_downstream: Path)
 
     content = health_port.read_text(encoding="utf-8")
     assert "adapters.driving" in content
+
+
+def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) -> None:
+    """Verifies that downstream test_boundaries.py executes and passes on pristine render."""
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0, f"Downstream architecture tests failed:\n{res.stderr}\n{res.stdout}"
