@@ -27,6 +27,12 @@ truths:
       - mechanism: "pytest_archon"
         test_file: "template/tests/architecture/test_boundaries.py"
         test_function: "test_core_domain_has_zero_external_dependencies"
+    planned_enforcements:
+      - mechanism: "ast_visitor"
+        name: "configurable_stdlib_domain_allowlist"
+        priority: "medium"
+        status: "planned"
+        description: "Enforce standard library imports exclusively in core/domain, supporting configurable opt-ins via pyproject.toml."
     documentation:
       path: "template/docs/reference/hexagonal_rules.md"
       anchor: "HEXA-TRUTH-01"
@@ -63,6 +69,12 @@ truths:
       - mechanism: "pytest_archon"
         test_file: "template/tests/architecture/test_boundaries.py"
         test_function: "test_ports_are_abstract_protocols_or_abcs"
+    planned_enforcements:
+      - mechanism: "ast_visitor"
+        name: "strict_port_import_whitelist"
+        priority: "high"
+        status: "planned"
+        description: "Restrict imports in core/ports to typing, abc, collections.abc, stdlib primitives, and core.domain."
     documentation:
       path: "template/docs/reference/hexagonal_rules.md"
       anchor: "HEXA-TRUTH-03"
@@ -80,6 +92,17 @@ truths:
       - mechanism: "pytest_archon"
         test_file: "template/tests/architecture/test_boundaries.py"
         test_function: "test_port_signatures_use_pure_dtos_and_primitives"
+    planned_enforcements:
+      - mechanism: "ast_visitor"
+        name: "anti_tunneling_orm_base_scanner"
+        priority: "high"
+        status: "planned"
+        description: "Inspect port method signatures to explicitly forbid ORM classes (DeclarativeBase, SQLModel, etc.)."
+      - mechanism: "ast_visitor"
+        name: "dto_immutability_enforcer"
+        priority: "medium"
+        status: "planned"
+        description: "Verify boundary DTO classes use @dataclass(frozen=True) or NamedTuple."
     documentation:
       path: "template/docs/reference/hexagonal_rules.md"
       anchor: "HEXA-TRUTH-04"
@@ -89,6 +112,7 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_port_signatures_use_pure_dtos_and_primitives"
+
 
   - id: "HEXA-TRUTH-05"
     name: "Zero Lifecycle Pollution in Domain"
