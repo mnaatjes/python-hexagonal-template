@@ -103,3 +103,49 @@ This reference documents the governing architectural invariants ("Truths") enfor
 * **Enforcement:**
   * `pytest_archon`: `test_domain_entities_are_self_validating`.
 * **Remediation:** Add validation guards inside entity constructors or `__post_init__` methods that raise `DomainValidationError` when invariants are breached.
+
+---
+
+### HEXA-TRUTH-11: Lexical & Structural Use Case Invariants
+
+* **Definition:** Every use case in `core/use_cases/` represents a discrete system operation. It must be authored as a class ending in `UseCase`, begin with an imperative verb (e.g. `Check`, `Get`, `Create`, `Process`), and declare constructor dependency injection via `__init__`.
+* **Enforcement:**
+  * `pytest_archon`: `test_use_cases_follow_lexical_and_structural_conventions`.
+* **Remediation:** Rename the class to match `^[A-Z][a-zA-Z0-9]+UseCase$` with an active imperative verb prefix, and inject dependencies through `__init__`.
+
+---
+
+### HEXA-TRUTH-12: Inversion of Control & Zero Concrete Instantiation
+
+* **Definition:** Use cases coordinate abstract driven ports. They must never import, reference, or instantiate concrete adapter classes directly inside their constructors or methods.
+* **Enforcement:**
+  * `pytest_archon`: `test_use_cases_do_not_instantiate_concrete_adapters`.
+* **Remediation:** Declare an abstract port interface in `core/ports/driven/` and accept it as a typed constructor parameter.
+
+---
+
+### HEXA-TRUTH-13: Transport & Framework Agnosticism in Use Cases
+
+* **Definition:** Use cases represent pure application workflows independent of external delivery mechanisms. They must never import web frameworks (FastAPI, Flask), CLI libraries (Click, Typer), or transport exceptions.
+* **Enforcement:**
+  * `.importlinter`: Contract `use_case_transport_isolation` forbids web and CLI packages.
+  * `pytest_archon`: `test_use_cases_are_transport_and_framework_agnostic`.
+* **Remediation:** Move transport parsing, HTTP status mapping, and CLI exit codes to driving adapters (`adapters/driving/`).
+
+---
+
+### HEXA-TRUTH-14: Stateless Interactor Invariants
+
+* **Definition:** Use case instances are stateless orchestrators. Execution methods must not mutate instance attributes (`self.*`) outside `__init__`, guaranteeing thread and coroutine safety when reused as singletons.
+* **Enforcement:**
+  * `pytest_archon`: `test_use_cases_are_stateless_interactors`.
+* **Remediation:** Pass state via method parameters and return values rather than storing intermediate results on `self`.
+
+---
+
+### HEXA-TRUTH-15: Zero Direct I/O Bypass
+
+* **Definition:** Use cases must route all network, filesystem, and external device interactions through abstract driven ports. Use cases never directly import HTTP clients (`requests`, `httpx`), raw sockets, or direct disk-writing libraries.
+* **Enforcement:**
+  * `pytest_archon`: `test_use_cases_do_not_bypass_ports_with_direct_io`.
+* **Remediation:** Create a driven port contract for the required I/O operation and implement it within an adapter in `adapters/driven/`.

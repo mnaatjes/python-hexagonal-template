@@ -217,3 +217,90 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_domain_entities_are_self_validating"
+
+  - id: "HEXA-TRUTH-11"
+    name: "Lexical & Structural Use Case Invariants"
+    summary: "Use cases must follow the *UseCase naming pattern with an imperative verb prefix and implement class-based constructor injection."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_follow_lexical_and_structural_conventions"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-11"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-11"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_follow_lexical_and_structural_conventions"
+
+  - id: "HEXA-TRUTH-12"
+    name: "Inversion of Control & Zero Concrete Instantiation"
+    summary: "Use cases must receive dependencies as abstract driven ports; they must never import or instantiate concrete adapters."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_do_not_instantiate_concrete_adapters"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-12"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-12"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_do_not_instantiate_concrete_adapters"
+
+  - id: "HEXA-TRUTH-13"
+    name: "Transport & Framework Agnosticism in Use Cases"
+    summary: "Use cases must remain completely transport-agnostic, never importing web frameworks, CLI libraries, or transport exceptions."
+    enforcements:
+      - mechanism: "import_linter"
+        contract_name: "use_case_transport_isolation"
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_are_transport_and_framework_agnostic"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-13"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-13"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_are_transport_and_framework_agnostic"
+
+  - id: "HEXA-TRUTH-14"
+    name: "Stateless Interactor Invariants"
+    summary: "Use cases must be stateless across invocations, forbidding self attribute mutations outside __init__."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_are_stateless_interactors"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-14"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-14"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_are_stateless_interactors"
+
+  - id: "HEXA-TRUTH-15"
+    name: "Zero Direct I/O Bypass"
+    summary: "Use cases must route all network and filesystem side-effects through abstract driven ports, never importing direct I/O clients."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_do_not_bypass_ports_with_direct_io"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-15"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-15"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_use_cases_do_not_bypass_ports_with_direct_io"

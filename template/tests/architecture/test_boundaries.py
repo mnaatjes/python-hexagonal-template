@@ -248,3 +248,133 @@ def test_domain_entities_are_self_validating() -> None:
                         "__post_init__" in method_names
                     ), f"Dataclass {node.name} in {py_file.name} must define __post_init__ guard"
     assert entities_audited > 0, "No domain models found in core.domain"
+
+
+def test_use_cases_follow_lexical_and_structural_conventions() -> None:
+    """Asserts that use cases follow the *UseCase naming pattern and define __init__ DI."""
+    pkg_root = _get_package_root()
+    uc_dir = pkg_root / "core" / "use_cases"
+    allowed_verb_prefixes = (
+        "Check",
+        "Get",
+        "Find",
+        "Create",
+        "Update",
+        "Delete",
+        "Execute",
+        "Process",
+        "Verify",
+        "Sync",
+        "Register",
+        "Submit",
+    )
+
+    use_cases_audited = 0
+    for py_file in uc_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                use_cases_audited += 1
+                assert node.name.endswith(
+                    "UseCase"
+                ), f"Class {node.name} in {py_file.name} must end with 'UseCase'"
+                assert node.name.startswith(
+                    allowed_verb_prefixes
+                ), f"Use case {node.name} in {py_file.name} must start with an imperative verb"
+
+                method_names = {
+                    item.name for item in node.body if isinstance(item, ast.FunctionDef)
+                }
+                assert (
+                    "__init__" in method_names
+                ), f"Use case {node.name} in {py_file.name} must define constructor __init__"
+    assert use_cases_audited > 0, "No use case classes found in core.use_cases"
+
+
+def test_use_cases_do_not_instantiate_concrete_adapters() -> None:
+    """Asserts that use cases never import concrete adapter packages."""
+    pkg_root = _get_package_root()
+    uc_dir = pkg_root / "core" / "use_cases"
+    pkg_name = pkg_root.name
+
+    for py_file in uc_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert not alias.name.startswith(
+                        f"{pkg_name}.adapters"
+                    ), f"Use case {py_file.name} illegally imports adapter: {alias.name}"
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                assert not node.module.startswith(
+                    f"{pkg_name}.adapters"
+                ), f"Use case {py_file.name} illegally imports adapter: {node.module}"
+
+
+def test_use_cases_are_transport_and_framework_agnostic() -> None:
+    """Asserts that use cases never import HTTP or CLI transport frameworks."""
+    pkg_root = _get_package_root()
+    uc_dir = pkg_root / "core" / "use_cases"
+    forbidden_transport = {"fastapi", "starlette", "flask", "click", "typer", "grpc"}
+
+    for py_file in uc_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert (
+                        alias.name.split(".")[0] not in forbidden_transport
+                    ), f"Use case {py_file.name} imports transport module: {alias.name}"
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                assert (
+                    node.module.split(".")[0] not in forbidden_transport
+                ), f"Use case {py_file.name} imports transport module: {node.module}"
+
+
+def test_use_cases_are_stateless_interactors() -> None:
+    """Asserts that use cases do not mutate self attributes outside __init__."""
+    pkg_root = _get_package_root()
+    uc_dir = pkg_root / "core" / "use_cases"
+
+    for py_file in uc_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for member in node.body:
+                    if isinstance(member, ast.FunctionDef) and member.name != "__init__":
+                        for sub_node in ast.walk(member):
+                            if isinstance(sub_node, ast.Assign):
+                                for target in sub_node.targets:
+                                    if (
+                                        isinstance(target, ast.Attribute)
+                                        and isinstance(target.value, ast.Name)
+                                        and target.value.id == "self"
+                                    ):
+                                        raise AssertionError(
+                                            f"Use case method {member.name} in {py_file.name} "
+                                            f"illegally mutates self.{target.attr}"
+                                        )
+
+
+def test_use_cases_do_not_bypass_ports_with_direct_io() -> None:
+    """Asserts that use cases do not directly import raw networking or HTTP clients."""
+    pkg_root = _get_package_root()
+    uc_dir = pkg_root / "core" / "use_cases"
+    forbidden_io = {"requests", "httpx", "aiohttp", "urllib", "socket"}
+
+    for py_file in uc_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert (
+                        alias.name.split(".")[0] not in forbidden_io
+                    ), f"Use case {py_file.name} imports direct I/O library: {alias.name}"
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                assert (
+                    node.module.split(".")[0] not in forbidden_io
+                ), f"Use case {py_file.name} imports direct I/O library: {node.module}"

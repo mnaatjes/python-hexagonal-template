@@ -90,3 +90,17 @@ This document establishes the authoritative vocabulary, system planes, and bound
 * **Definition:** The anti-pattern of embedding long-running process lifecycles, event loops, thread orchestration, OS process spawning, or hardware signal handling inside domain entities or use-case interactors.
 * **Prohibited Constructs in Core:** Calling `asyncio.run()`, instantiating `threading.Thread` or `multiprocessing.Process`, invoking `subprocess.run()`, or registering listeners with `signal.signal()`.
 * **Invariant:** Core use cases and domain models represent pure, instantaneous transformations and evaluations. Execution loops, daemon processes, connection lifecycles, and shutdown hooks belong strictly to driving adapters, driven adapters, or the composition root (`bootstrap/`).
+
+### 10. Use Case (Application Service / Interactor)
+* **Definition:** An application orchestrator residing in `core/use_cases/` that encapsulates a single, cohesive user intention or system workflow. It coordinates domain entities and driven ports to fulfill an operation without containing transport or persistence logic.
+* **Topology:**
+  $$\text{Driving Adapter} \longrightarrow \text{Driving Port} \longleftarrow \mathbf{\text{Use Case}} \longrightarrow \text{Domain Entities} \;\&\; \text{Driven Ports}$$
+* **Invariant:** A use case depends exclusively on `core/domain/` (entities, value objects, exceptions) and `core/ports/driven/` (outbound protocols). It never imports driving or driven adapters, never handles transport formats (HTTP status codes, CLI flags), and never executes I/O directly.
+
+### 11. Transport Agnosticism
+* **Definition:** The architectural invariant ensuring that application use cases remain completely unaware of the protocol, delivery channel, or transport framework used to invoke them.
+* **Invariant:** A use case method signature accepts pure domain primitives or DTOs and returns domain types. It never references HTTP headers, status codes, query strings, CLI argv, or web exceptions. The exact same use case can be executed by a CLI, an HTTP API, a message queue, or a cron job without modification.
+
+### 12. Stateless Interactor
+* **Definition:** The structural guarantee that a use case instance holds no mutable workflow state across separate invocations.
+* **Invariant:** Instance attributes assigned during `__init__` are restricted strictly to injected driven port dependencies and static configuration. Methods must never assign to `self.*` during execution, guaranteeing safety when use cases are registered as singletons in concurrent async or multithreaded runtimes.
