@@ -3,3 +3,4 @@
 - [x] Determine if the src/ directory topology MUST be established for enforcement mechanisms to work (Resolved: Topology A established)
 - [ ] When scripts/ enforcement required, should we architect downstream scripts/ directory with a lib/ sub-dir for atomized tests?
 - [x] For abstract ports, contracts, and interfaces - what python packages will we use, what will we permit the user to implement? (Resolved: stdlib typing.Protocol / abc.ABC codified in ADR-0002 Section 9 and HEXA-TRUTH-03)
+- [ ] Author downstream operator documentation (`docs/reference/verification_errors.md` or `docs/how-to/troubleshooting_boundary_violations.md`) detailing where errors surface, how to interpret diagnostics across all enforcement mechanisms (lint-imports, mypy, AST pytest, verify.py), and exact remediation steps.
