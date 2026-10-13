@@ -101,3 +101,8 @@ When authoring or modifying code within this service, coding assistants must str
 
 ## HEXA-TRUTH-27: Dual-Adapter Test Double Parity
 * Maintain an in-memory test double in `tests/doubles/` for every driven port in `core/ports/driven/` to guarantee offline testability.
+
+## HEXA-TRUTH-28: DTO Immutability & Structural Purity
+* Co-locate DTOs inside `core/ports/driving/` or `core/ports/driven/`. Never place DTOs in `adapters/` or `core/domain/`.
+* Decorate all DTOs with `@dataclass(frozen=True, slots=True)` or inherit `DataTransferObject`.
+* Restrict field types strictly to primitives, frozen DTOs, tuples, frozensets, and domain value objects. Never use mutable lists/dicts or ORM/framework models.

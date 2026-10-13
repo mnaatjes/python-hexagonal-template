@@ -438,9 +438,12 @@ def test_ports_follow_technology_agnostic_nomenclature() -> None:
         tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
+                if node.name in ("DataTransferObject",) or node.name.endswith("DTO"):
+                    continue
                 assert node.name.endswith(
                     "Port"
                 ), f"Port class {node.name} in {py_file.name} must end with 'Port'"
+
                 for tech in forbidden_tech:
                     assert (
                         tech not in node.name
@@ -748,3 +751,61 @@ def test_driven_ports_test_double_parity() -> None:
             f"Driven port '{port_name}' has no registered in-memory test double in tests/doubles/. "
             f"Expected {expected_fake} or {expected_inmem} satisfying HEXA-TRUTH-27."
         )
+
+
+def test_dto_immutability_and_structural_purity() -> None:
+    """Asserts that DTOs in core/ports are frozen and do not use mutable or framework types."""
+    pkg_root = _get_package_root()
+    ports_dir = pkg_root / "core" / "ports"
+    forbidden_field_types = {
+        "list",
+        "dict",
+        "set",
+        "Request",
+        "Response",
+        "Base",
+        "Model",
+        "QuerySet",
+        "Cursor",
+    }
+
+    for py_file in ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and (
+                node.name.endswith("DTO")
+                or node.name.endswith("Command")
+                or node.name.endswith("Query")
+            ):
+                # Assert frozen dataclass decorator
+                is_frozen = False
+                for dec in node.decorator_list:
+                    if isinstance(dec, ast.Call):
+                        func_name = None
+                        if isinstance(dec.func, ast.Name):
+                            func_name = dec.func.id
+                        elif isinstance(dec.func, ast.Attribute):
+                            func_name = dec.func.attr
+                        if func_name == "dataclass":
+                            for kw in dec.keywords:
+                                if kw.arg == "frozen" and isinstance(kw.value, ast.Constant):
+                                    if kw.value.value is True:
+                                        is_frozen = True
+                assert is_frozen, (
+                    f"DTO class {node.name} in {py_file.name} must be decorated with "
+                    "@dataclass(frozen=True)"
+                )
+
+                # Assert field types are not mutable
+                for item in node.body:
+                    if isinstance(item, ast.AnnAssign):
+                        ann_id = None
+                        if isinstance(item.annotation, ast.Name):
+                            ann_id = item.annotation.id
+                        elif isinstance(item.annotation, ast.Attribute):
+                            ann_id = item.annotation.attr
+                        assert (
+                            ann_id not in forbidden_field_types
+                        ), f"DTO {node.name} field uses forbidden mutable/framework type: {ann_id}"

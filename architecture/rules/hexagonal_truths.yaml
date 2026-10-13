@@ -510,3 +510,20 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_driven_ports_test_double_parity"
+
+  - id: "HEXA-TRUTH-28"
+    name: "DTO Immutability & Structural Purity"
+    summary: "Data Transfer Objects must be decorated as frozen dataclasses (or inherit DataTransferObject) and use strictly whitelisted primitive or immutable field types."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_dto_immutability_and_structural_purity"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-28"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-28"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_dto_immutability_and_structural_purity"

@@ -18,3 +18,8 @@ class DrivingPort(Port):
 @runtime_checkable
 class DrivenPort(Port):
     """Outbound / Secondary port protocol implemented by external adapters."""
+
+
+@runtime_checkable
+class DataTransferObject(Protocol):
+    """Universal marker protocol for immutable boundary Data Transfer Objects."""
