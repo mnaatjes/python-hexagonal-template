@@ -186,3 +186,75 @@ This reference documents the governing architectural invariants ("Truths") enfor
   * `.importlinter`: Contract `composition_root_isolation` strictly forbids imports of `bootstrap` from `core` and `adapters`.
   * `pytest_archon`: `test_composition_root_isolation` AST test asserts zero bootstrap imports in core and adapter packages.
 * **Remediation:** Remove `bootstrap` imports from core and adapter files. Pass dependencies into constructors via dependency injection configured inside `bootstrap/container.py`.
+
+---
+
+### HEXA-TRUTH-20: Driving Port Directional Integrity & Use Case Exclusivity
+
+* **Definition:** Driving ports define the application's exposed capabilities. They must reside in `core/ports/driving/`, inherit from `DrivingPort`, and be implemented exclusively by application use cases in `core/use_cases/`. Adapters must never implement driving ports (driving adapters invoke them).
+* **Enforcement:**
+  * `pytest_archon`: `test_driving_ports_directional_integrity_and_exclusivity`.
+* **Remediation:** Ensure port contracts in `core/ports/driving/` inherit from `DrivingPort`. Move any adapter implementing a driving port into `core/use_cases/` or convert the adapter into a consumer calling the port.
+
+---
+
+### HEXA-TRUTH-21: Driven Port Inversion & Injection Governance
+
+* **Definition:** Driven ports define the SPI dependencies the application requires from the environment. They must reside in `core/ports/driven/`, inherit from `DrivenPort`, and be implemented exclusively by driven adapters in `adapters/driven/`. Use cases must never implement driven ports and must accept them strictly via constructor dependency injection (`__init__`).
+* **Enforcement:**
+  * `pytest_archon`: `test_driven_ports_inversion_and_injection_governance`.
+* **Remediation:** Ensure port contracts in `core/ports/driven/` inherit from `DrivenPort`. Ensure driven adapters implement the port, and inject the port interface into use cases via `__init__`.
+
+---
+
+### HEXA-TRUTH-22: Repository vs. Recipient Driven Port Semantics
+
+* **Definition:** Driven ports must be classified either as a **Repository** (read/write methods returning domain state or models) or a **Recipient** (fire-and-forget notification methods returning `None` or boolean ACK). Driven ports must not conflate notification side effects with state persistence in a single interface.
+* **Enforcement:**
+  * `pytest_archon`: `test_driven_ports_repository_recipient_semantics`.
+* **Remediation:** Split mixed ports into separate repository and recipient contracts. Ensure methods returning state adhere to repository semantics and notification methods return `None`.
+
+---
+
+### HEXA-TRUTH-23: Outbound Infrastructure Exception Masking
+
+* **Definition:** Driven adapters must catch external infrastructure, network, database, and OS exceptions (`psycopg2`, `redis`, `boto3`, `OSError`) and translate them into domain-level port exceptions before re-raising. Third-party vendor exceptions must never leak across driven ports into the core domain.
+* **Enforcement:**
+  * `pytest_archon`: `test_outbound_infrastructure_exception_masking`.
+* **Remediation:** Wrap external SDK or driver calls in `try...except` inside driven adapters and raise custom domain port exceptions inheriting from `DomainError`.
+
+---
+
+### HEXA-TRUTH-24: Driven Port Return Type Encapsulation
+
+* **Definition:** Driven port methods must return domain models, value objects, or frozen DTOs. They must never return ORM querysets, raw database cursors, HTTP responses, or untyped dictionaries (`dict[str, Any]`).
+* **Enforcement:**
+  * `pytest_archon`: `test_driven_ports_return_type_encapsulation`.
+* **Remediation:** Map database rows or raw API responses to pure domain models or frozen DTOs within the driven adapter before returning across the port.
+
+---
+
+### HEXA-TRUTH-25: Driving Port CQRS & Use Case Cohesion
+
+* **Definition:** Driving ports represent single cohesive business capabilities or CQRS operations. They must never expose persistence-oriented CRUD primitives (`save`, `delete`, `find_by_id`, `update_row`).
+* **Enforcement:**
+  * `pytest_archon`: `test_driving_ports_cqrs_and_use_case_cohesion`.
+* **Remediation:** Rename driving port operations to express domain business intentions (e.g. `check_health`, `register_user`, `calculate_invoice`) rather than database operations.
+
+---
+
+### HEXA-TRUTH-26: Caller & Transport Ignorance in Driving Signatures
+
+* **Definition:** Driving port parameters must never accept transport-specific objects (`Request`, `Response`, `Header`, `Session`, `CliContext`). All parameters must be primitive scalars, value objects, or frozen input DTOs.
+* **Enforcement:**
+  * `pytest_archon`: `test_driving_ports_caller_and_transport_ignorance`.
+* **Remediation:** Extract transport headers, cookies, and request bodies into pure domain DTOs inside the driving adapter before passing them into the driving port.
+
+---
+
+### HEXA-TRUTH-27: Dual-Adapter Test Double Parity
+
+* **Definition:** Every driven port in `core/ports/driven/` must have a corresponding in-memory test double (stub or fake) residing in `tests/doubles/` satisfying the port protocol. This ensures that the application can be verified completely offline without live infrastructure.
+* **Enforcement:**
+  * `pytest_archon`: `test_driven_ports_test_double_parity`.
+* **Remediation:** Author an in-memory double (e.g. `FakeSystemProbeAdapter`) in `tests/doubles/` using Python standard library collections (`dict`, `list`).

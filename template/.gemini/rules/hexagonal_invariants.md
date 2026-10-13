@@ -75,3 +75,29 @@ When authoring or modifying code within this service, coding assistants must str
 ## HEXA-TRUTH-19: Composition Root Isolation
 * Core layers (`core/domain/`, `core/ports/`, `core/use_cases/`) and adapters (`adapters/`) must never import from `bootstrap/`.
 * The composition root (`bootstrap/container.py`) is the sole structural authority for instantiating adapters and wiring dependencies into use cases.
+
+## HEXA-TRUTH-20: Driving Port Directional Integrity & Use Case Exclusivity
+* Driving ports must reside in `core/ports/driving/` and inherit from `DrivingPort`.
+* Driving ports are implemented strictly by application use cases (`core/use_cases/`). Adapters must never implement driving ports.
+
+## HEXA-TRUTH-21: Driven Port Inversion & Injection Governance
+* Driven ports must reside in `core/ports/driven/` and inherit from `DrivenPort`.
+* Driven ports are implemented strictly by driven adapters (`adapters/driven/`). Use cases must accept driven ports via constructor dependency injection (`__init__`) and never implement them.
+
+## HEXA-TRUTH-22: Repository vs. Recipient Driven Port Semantics
+* Classify driven ports as Repositories (state retrieval/persistence) or Recipients (fire-and-forget notifications returning `None`). Never conflate both in one interface.
+
+## HEXA-TRUTH-23: Outbound Infrastructure Exception Masking
+* Driven adapters must catch external vendor exceptions (`psycopg2`, `redis`, `boto3`, `OSError`) and translate them into domain port exceptions.
+
+## HEXA-TRUTH-24: Driven Port Return Type Encapsulation
+* Driven port methods must return domain models, value objects, or frozen DTOs. Never return ORM querysets, raw database cursors, or untyped dicts.
+
+## HEXA-TRUTH-25: Driving Port CQRS & Use Case Cohesion
+* Driving ports represent cohesive business capabilities. Never expose persistence CRUD verbs (`save`, `delete`, `find_by_id`, `update_row`).
+
+## HEXA-TRUTH-26: Caller & Transport Ignorance in Driving Signatures
+* Driving port parameters must never accept transport-specific objects (`Request`, `Response`, `Header`, `Session`, `CliContext`). Use pure primitives or frozen DTOs.
+
+## HEXA-TRUTH-27: Dual-Adapter Test Double Parity
+* Maintain an in-memory test double in `tests/doubles/` for every driven port in `core/ports/driven/` to guarantee offline testability.
