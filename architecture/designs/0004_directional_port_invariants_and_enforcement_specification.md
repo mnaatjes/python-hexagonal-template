@@ -105,8 +105,22 @@ graph TD
 
 ### 3.8 HEXA-TRUTH-27: Dual-Adapter Test Double Parity
 * **Definition:** For every driven port declared in `core/ports/driven/`, downstream test suites must maintain an in-memory test double (stub or fake) implementing the port contract to allow full testability in isolation from real infrastructure.
-* **AST / Test Suite Enforcement:**
-  * Verify that for each port in `core/ports/driven/`, a matching test double exists in `tests/test_doubles/` or `tests/mocks/` satisfying the port protocol.
+* **Cardinality & Boundaries:**
+  * Driven ports must have a **1:1 relationship with in-memory test doubles** (`Fake<PortName>` or `InMemory<PortName>`).
+  * Driven ports must represent cohesive **domain capabilities** (Role Interfaces), never physical I/O streams or raw HTTP sockets.
+* **In-Memory Fake Engineering Rules:**
+  1. *Zero External Infrastructure:* Doubles must use Python standard library data structures (`dict`, `list`, `set`) and never import Docker, SQLite, or network sockets.
+  2. *Strict Typing Conformance:* Doubles must implement the target `DrivenPort` protocol completely and pass `mypy --strict`.
+  3. *Deterministic State Reset:* Doubles must provide a `.reset()` method or be instantiated cleanly per test fixture.
+  4. *Colocation:* Doubles reside strictly in `tests/doubles/` or `tests/fakes/`, never in production `src/`.
+  5. *Fault Injection:* Doubles should support configurable error modes (e.g., `fake.set_failure_mode(True)`) to test exception branches.
+* **Mechanical Discovery Algorithm:**
+  1. The AST visitor catalogs all port classes in `src/{{package_name}}/core/ports/driven/*.py` inheriting `DrivenPort`.
+  2. The visitor scans `tests/doubles/*.py` and `tests/fakes/*.py`.
+  3. For each cataloged driven port, the visitor verifies that a class exists in `tests/doubles/` whose public method signatures match or which explicitly inherits the driven port.
+  4. If a driven port lacks a corresponding in-memory double, CI raises:
+     `AssertionError: Driven port '<PortName>' has no registered in-memory test double in tests/doubles/. Downstream CI requires an in-memory double satisfying HEXA-TRUTH-27.`
+
 
 ---
 
