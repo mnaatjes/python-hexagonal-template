@@ -20,3 +20,12 @@ layers =
     adapters
     core.use_cases
     core.domain
+
+[importlinter:contract:domain_port_isolation]
+name = domain_port_isolation
+type = forbidden
+source_modules =
+    core.domain
+forbidden_modules =
+    core.ports
+    core.use_cases
