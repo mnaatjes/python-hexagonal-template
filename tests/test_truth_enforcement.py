@@ -448,3 +448,87 @@ def test_downstream_negative_mutation_use_case_implements_driven_port(
     assert res.returncode != 0
     err_needle = "illegally implements driven port"
     assert err_needle in res.stdout or err_needle in res.stderr
+
+
+def test_downstream_negative_mutation_driving_port_persistence_crud_verbs(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that driving ports using persistence CRUD verbs fail."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    port_file = pkg_dir / "core" / "ports" / "driving" / "health_port.py"
+
+    # Inject persistence CRUD verb into driving port
+    port_file.write_text(
+        "from typing import Protocol, runtime_checkable\n"
+        "from ..base import DrivingPort\n\n"
+        "@runtime_checkable\n"
+        "class GetHealthPort(DrivingPort):\n"
+        "    def save(self) -> None:\n"
+        "        ...\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "uses persistence CRUD verb"
+    assert err_needle in res.stdout or err_needle in res.stderr
+
+
+def test_downstream_negative_mutation_driven_port_untyped_dict_return(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that driven ports returning raw untyped dicts fail."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    port_file = pkg_dir / "core" / "ports" / "driven" / "probe_port.py"
+
+    # Inject raw untyped dict return into driven port
+    port_file.write_text(
+        "from typing import Any, Protocol, runtime_checkable\n"
+        "from ..base import DrivenPort\n\n"
+        "@runtime_checkable\n"
+        "class SystemProbePort(DrivenPort):\n"
+        "    def probe_system(self, service_name: str) -> dict:\n"
+        "        ...\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "returns forbidden infrastructure type"
+    assert err_needle in res.stdout or err_needle in res.stderr

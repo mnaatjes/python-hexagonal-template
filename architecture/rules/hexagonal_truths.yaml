@@ -408,3 +408,105 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_driven_ports_inversion_and_injection_governance"
+
+  - id: "HEXA-TRUTH-22"
+    name: "Repository vs. Recipient Driven Port Semantics"
+    summary: "Driven ports must be classified either as a Repository returning domain state or a Recipient returning None or acknowledgment."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_repository_recipient_semantics"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-22"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-22"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_repository_recipient_semantics"
+
+  - id: "HEXA-TRUTH-23"
+    name: "Outbound Infrastructure Exception Masking"
+    summary: "Driven adapters must intercept external infrastructure exceptions and wrap or translate them into domain-level port exceptions."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_outbound_infrastructure_exception_masking"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-23"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-23"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_outbound_infrastructure_exception_masking"
+
+  - id: "HEXA-TRUTH-24"
+    name: "Driven Port Return Type Encapsulation"
+    summary: "Driven port methods must return domain models, value objects, or frozen DTOs, strictly forbidding ORM querysets, raw database cursors, or untyped dictionaries."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_return_type_encapsulation"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-24"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-24"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_return_type_encapsulation"
+
+  - id: "HEXA-TRUTH-25"
+    name: "Driving Port CQRS & Use Case Cohesion"
+    summary: "Driving ports must represent single cohesive business capabilities and must never expose persistence-oriented CRUD primitives."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_cqrs_and_use_case_cohesion"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-25"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-25"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_cqrs_and_use_case_cohesion"
+
+  - id: "HEXA-TRUTH-26"
+    name: "Caller & Transport Ignorance in Driving Signatures"
+    summary: "Driving port parameters must never accept transport-specific objects like HTTP requests, headers, cookies, or CLI argv contexts."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_caller_and_transport_ignorance"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-26"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-26"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_caller_and_transport_ignorance"
+
+  - id: "HEXA-TRUTH-27"
+    name: "Dual-Adapter Test Double Parity"
+    summary: "Every driven port in core/ports/driven/ must have a corresponding in-memory test double in tests/doubles/ satisfying the protocol for offline testability."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_test_double_parity"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-27"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-27"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_test_double_parity"

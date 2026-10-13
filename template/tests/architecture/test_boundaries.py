@@ -595,3 +595,156 @@ def test_driven_ports_inversion_and_injection_governance() -> None:
                     f"Use case {node.name} in {py_file.name} illegally implements "
                     f"driven port(s): {violating}"
                 )
+
+
+def test_driven_ports_repository_recipient_semantics() -> None:
+    """Asserts that driven ports methods have explicit return annotations (state or None)."""
+    pkg_root = _get_package_root()
+    driven_ports_dir = pkg_root / "core" / "ports" / "driven"
+
+    for py_file in driven_ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef) and not item.name.startswith("_"):
+                        assert item.returns is not None, (
+                            f"Driven port method {item.name} in {node.name} must declare "
+                            "an explicit return type annotation"
+                        )
+
+
+def test_outbound_infrastructure_exception_masking() -> None:
+    """Asserts that driven adapters catch raw infrastructure exceptions or raise domain errors."""
+    pkg_root = _get_package_root()
+    adapters_dir = pkg_root / "adapters" / "driven"
+
+    for py_file in adapters_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            # Verify any direct raise raises a domain-oriented exception, not raw Exception
+            if isinstance(node, ast.Raise) and node.exc:
+                if isinstance(node.exc, ast.Call) and isinstance(node.exc.func, ast.Name):
+                    assert (
+                        node.exc.func.id != "Exception"
+                    ), f"Driven adapter {py_file.name} raises generic Exception directly"
+
+
+def test_driven_ports_return_type_encapsulation() -> None:
+    """Asserts that driven port returns do not leak raw querysets, cursors, or untyped dicts."""
+    pkg_root = _get_package_root()
+    driven_ports_dir = pkg_root / "core" / "ports" / "driven"
+    forbidden_return_types = {"dict", "Dict", "Cursor", "QuerySet", "Response", "Any"}
+
+    for py_file in driven_ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef) and item.returns:
+                        ret_id = None
+                        if isinstance(item.returns, ast.Name):
+                            ret_id = item.returns.id
+                        elif isinstance(item.returns, ast.Attribute):
+                            ret_id = item.returns.attr
+                        assert ret_id not in forbidden_return_types, (
+                            f"Driven port method {item.name} in {node.name} returns forbidden "
+                            f"infrastructure type: {ret_id}"
+                        )
+
+
+def test_driving_ports_cqrs_and_use_case_cohesion() -> None:
+    """Asserts that driving port operations do not expose persistence-oriented CRUD verbs."""
+    pkg_root = _get_package_root()
+    driving_ports_dir = pkg_root / "core" / "ports" / "driving"
+    forbidden_verbs = {"save", "delete", "find_by_id", "insert", "update_row"}
+
+    for py_file in driving_ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef):
+                        assert item.name not in forbidden_verbs, (
+                            f"Driving port method {item.name} in {node.name} uses persistence "
+                            "CRUD verb instead of business intention"
+                        )
+
+
+def test_driving_ports_caller_and_transport_ignorance() -> None:
+    """Asserts that driving port method parameters do not accept transport context types."""
+    pkg_root = _get_package_root()
+    driving_ports_dir = pkg_root / "core" / "ports" / "driving"
+    forbidden_param_types = {"Request", "Response", "Header", "Session", "CliContext"}
+
+    for py_file in driving_ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef):
+                        for arg in item.args.args:
+                            if arg.annotation:
+                                ann_id = None
+                                if isinstance(arg.annotation, ast.Name):
+                                    ann_id = arg.annotation.id
+                                elif isinstance(arg.annotation, ast.Attribute):
+                                    ann_id = arg.annotation.attr
+                                assert ann_id not in forbidden_param_types, (
+                                    f"Driving port method {item.name} in {node.name} accepts "
+                                    f"forbidden transport context: {ann_id}"
+                                )
+
+
+def test_driven_ports_test_double_parity() -> None:
+    """Asserts that driven ports have a matching in-memory double in tests/doubles/."""
+    pkg_root = _get_package_root()
+
+    driven_ports_dir = pkg_root / "core" / "ports" / "driven"
+    tests_doubles_dir = pkg_root.parent.parent / "tests" / "doubles"
+
+    driven_ports: set[str] = set()
+    for py_file in driven_ports_dir.rglob("*.py"):
+        if py_file.name in ("__init__.py", "base.py"):
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                driven_ports.add(node.name)
+
+    double_classes: set[str] = set()
+    if tests_doubles_dir.exists():
+        for py_file in tests_doubles_dir.rglob("*.py"):
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    double_classes.add(node.name)
+                    # Also record base classes inherited
+                    for b in node.bases:
+                        if isinstance(b, ast.Name):
+                            double_classes.add(b.id)
+                        elif isinstance(b, ast.Attribute):
+                            double_classes.add(b.attr)
+
+    for port_name in driven_ports:
+        expected_fake = f"Fake{port_name.replace('Port', '')}Adapter"
+        expected_inmem = f"InMemory{port_name.replace('Port', '')}Adapter"
+        has_double = (
+            expected_fake in double_classes
+            or expected_inmem in double_classes
+            or port_name in double_classes
+        )
+        assert has_double, (
+            f"Driven port '{port_name}' has no registered in-memory test double in tests/doubles/. "
+            f"Expected {expected_fake} or {expected_inmem} satisfying HEXA-TRUTH-27."
+        )

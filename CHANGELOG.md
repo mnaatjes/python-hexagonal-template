@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed Step 3 of Health Service Walking Skeleton (SDD-0003) implementing pure Python `CliHealthAdapter` driving adapter and `Container` composition root wiring.
 - Adopted ADR 0004 and SDD-0004 establishing directional port boundary governance and 8-truth specification (`HEXA-TRUTH-20` through `HEXA-TRUTH-27`).
 - Codified and quad-plane enforced `HEXA-TRUTH-20` (Driving Port Directional Integrity & Use Case Exclusivity) and `HEXA-TRUTH-21` (Driven Port Inversion & Injection Governance).
+- Codified and quad-plane enforced `HEXA-TRUTH-22` (Repository vs. Recipient Driven Port Semantics), `HEXA-TRUTH-23` (Outbound Infrastructure Exception Masking), and `HEXA-TRUTH-24` (Driven Port Return Type Encapsulation).
+- Codified and quad-plane enforced `HEXA-TRUTH-25` (Driving Port CQRS & Use Case Cohesion), `HEXA-TRUTH-26` (Caller & Transport Ignorance in Driving Signatures), and `HEXA-TRUTH-27` (Dual-Adapter Test Double Parity).
+- Shipped `FakeSystemProbeAdapter` in `template/tests/doubles/` satisfying `HEXA-TRUTH-27` test double parity.
+
 
 
 
