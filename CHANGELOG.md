@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Four-level port-adapter lexicon documented in `architecture/glossary.md` covering marker taxonomy, domain contracts, use cases, and concrete adapters.
 - Enforced self-documenting inheritance across the walking skeleton (`GetHealthPort(DrivingPort)`, `SystemProbePort(DrivenPort)`, `CheckHealthUseCase(GetHealthPort)`, and `OsSystemProbeAdapter(SystemProbePort)`).
 - Template Python Purity Directive codified in `.gemini/rules/template_python_purity.md`, permanently eliminating `.jinja` source files from `template/src/` via pure intra-package relative imports.
+- Codified and quad-plane enforced `HEXA-TRUTH-19` (Composition Root Isolation) forbidding core layers and adapters from importing `bootstrap`.
+- Completed Step 3 of Health Service Walking Skeleton (SDD-0003) implementing pure Python `CliHealthAdapter` driving adapter and `Container` composition root wiring.
+
 
 ## [0.1.0] - 2026-10-12
 

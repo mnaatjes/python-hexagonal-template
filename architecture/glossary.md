@@ -142,3 +142,9 @@ This taxonomy establishes the structural layers and governance expectations gove
 * **Terms:** `OsSystemProbeAdapter`, `CliHealthAdapter` (and downstream: `PostgresUserRepository`, `FastApiHealthRoute`).
 * **Role:** The real-world implementations that interface with operating systems, databases, network sockets, and CLIs. They implement Level 2 driven ports or invoke Level 2 driving ports.
 * **Governance & Enforcement:** Self-documenting by default in starter scaffolding (e.g. `class OsSystemProbeAdapter(SystemProbePort):`). Verified structurally via `mypy --strict`, preserving flexibility for external and third-party libraries.
+
+---
+
+### 16. Composition Root (`bootstrap/`)
+* **Definition:** The centralized, isolated structural location where the application's dependency graph is instantiated and wired together.
+* **Invariant:** Resides strictly in `bootstrap/` (e.g., `bootstrap/container.py`). It is the only location permitted to import both concrete adapters and use cases simultaneously. Core layers (`domain`, `ports`, `use_cases`) and `adapters` must never import from `bootstrap`, preventing circular couplings and global state leakage (`HEXA-TRUTH-19`).

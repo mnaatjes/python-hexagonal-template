@@ -71,3 +71,7 @@ When authoring or modifying code within this service, coding assistants must str
 
 ## HEXA-TRUTH-18: Strict Port Package Import Whitelist
 * Port files must only import from `typing`, `abc`, `collections.abc`, standard primitives, and `core.domain`.
+
+## HEXA-TRUTH-19: Composition Root Isolation
+* Core layers (`core/domain/`, `core/ports/`, `core/use_cases/`) and adapters (`adapters/`) must never import from `bootstrap/`.
+* The composition root (`bootstrap/container.py`) is the sole structural authority for instantiating adapters and wiring dependencies into use cases.

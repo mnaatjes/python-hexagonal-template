@@ -42,3 +42,14 @@ forbidden_modules =
     flask
     click
     typer
+
+[importlinter:contract:composition_root_isolation]
+name = composition_root_isolation
+type = forbidden
+source_modules =
+    core.domain
+    core.ports
+    core.use_cases
+    adapters
+forbidden_modules =
+    bootstrap
