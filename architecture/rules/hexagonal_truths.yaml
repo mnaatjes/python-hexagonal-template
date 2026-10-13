@@ -355,3 +355,22 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_ports_adhere_to_strict_import_whitelist"
+
+  - id: "HEXA-TRUTH-19"
+    name: "Composition Root Isolation"
+    summary: "The composition root (bootstrap) is the sole authority for wiring adapters to ports; core layers and adapters must never import from bootstrap."
+    enforcements:
+      - mechanism: "import_linter"
+        contract_name: "composition_root_isolation"
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_composition_root_isolation"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-19"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-19"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_composition_root_isolation"

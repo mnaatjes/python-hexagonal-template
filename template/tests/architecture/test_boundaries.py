@@ -481,3 +481,35 @@ def test_ports_adhere_to_strict_import_whitelist() -> None:
                     assert (
                         root_mod in allowed_modules or is_domain or is_ports
                     ), f"Port file {py_file.name} imports unauthorized module: {node.module}"
+
+
+def test_composition_root_isolation() -> None:
+    """Asserts that core layers and adapters never import from the bootstrap package."""
+    pkg_root = _get_package_root()
+    pkg_name = pkg_root.name
+    isolated_dirs = [
+        pkg_root / "core" / "domain",
+        pkg_root / "core" / "ports",
+        pkg_root / "core" / "use_cases",
+        pkg_root / "adapters",
+    ]
+
+    for base_dir in isolated_dirs:
+        for py_file in base_dir.rglob("*.py"):
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        assert not alias.name.startswith(
+                            f"{pkg_name}.bootstrap"
+                        ), f"File {py_file.name} illegally imports bootstrap: {alias.name}"
+                elif isinstance(node, ast.ImportFrom):
+                    # Check absolute imports
+                    if node.module:
+                        assert not node.module.startswith(
+                            f"{pkg_name}.bootstrap"
+                        ), f"File {py_file.name} illegally imports bootstrap: {node.module}"
+                    # Check relative imports crossing into bootstrap
+                    if node.level and node.level > 1 and node.module and "bootstrap" in node.module:
+                        err = f"File {py_file.name} illegally imports bootstrap: {node.module}"
+                        raise AssertionError(err)

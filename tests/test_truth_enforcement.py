@@ -318,3 +318,53 @@ def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) 
         text=True,
     )
     assert res.returncode == 0, f"Downstream architecture tests failed:\n{res.stderr}\n{res.stdout}"
+
+
+def test_downstream_walking_skeleton_components_exist(rendered_downstream: Path) -> None:
+    """Positive test: verifies that CliHealthAdapter and Container render cleanly."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    cli_adapter = pkg_dir / "adapters" / "driving" / "cli_health.py"
+    container = pkg_dir / "bootstrap" / "container.py"
+    assert cli_adapter.is_file()
+    assert container.is_file()
+    assert "class CliHealthAdapter:" in cli_adapter.read_text(encoding="utf-8")
+    assert "class Container:" in container.read_text(encoding="utf-8")
+
+
+def test_downstream_negative_mutation_bootstrap_import_leakage(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that importing bootstrap inside adapters or core fails."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    adapter_file = pkg_dir / "adapters" / "driven" / "system_probe.py"
+
+    # Inject illegal bootstrap import into adapter
+    adapter_file.write_text(
+        "from ...bootstrap.container import Container\n\n"
+        "class OsSystemProbeAdapter:\n"
+        "    pass\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "illegally imports bootstrap"
+    assert err_needle in res.stdout or err_needle in res.stderr

@@ -176,3 +176,13 @@ This reference documents the governing architectural invariants ("Truths") enfor
 * **Enforcement:**
   * `pytest_archon`: `test_ports_adhere_to_strict_import_whitelist`.
 * **Remediation:** Remove external imports from port files. Map external payloads to pure domain types before passing them through ports.
+
+---
+
+### HEXA-TRUTH-19: Composition Root Isolation
+
+* **Definition:** The composition root (`bootstrap/`) is the sole structural authority responsible for instantiating concrete adapters, wiring dependency injection into use cases, and assembling executable entrypoints. Core layers (`core/domain/`, `core/ports/`, `core/use_cases/`) and adapters (`adapters/`) must never import from `bootstrap/`.
+* **Enforcement:**
+  * `.importlinter`: Contract `composition_root_isolation` strictly forbids imports of `bootstrap` from `core` and `adapters`.
+  * `pytest_archon`: `test_composition_root_isolation` AST test asserts zero bootstrap imports in core and adapter packages.
+* **Remediation:** Remove `bootstrap` imports from core and adapter files. Pass dependencies into constructors via dependency injection configured inside `bootstrap/container.py`.
