@@ -213,7 +213,7 @@ def test_domain_has_zero_ambient_environment_access() -> None:
 
 
 def test_domain_entities_are_self_validating() -> None:
-    """Asserts that domain entities validate their attributes or have valid default state."""
+    """Asserts that domain entities validate attributes via __post_init__ or Enum constants."""
     pkg_root = _get_package_root()
     domain_dir = pkg_root / "core" / "domain"
 
@@ -225,15 +225,26 @@ def test_domain_entities_are_self_validating() -> None:
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 entities_audited += 1
-                # Must be a frozen dataclass or enum
                 decorator_names = {d.id for d in node.decorator_list if isinstance(d, ast.Name)}
                 for d in node.decorator_list:
                     if isinstance(d, ast.Call) and isinstance(d.func, ast.Name):
                         decorator_names.add(d.func.id)
                 base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+
+                is_enum = "StrEnum" in base_names or "Enum" in base_names
+                is_dataclass = "dataclass" in decorator_names
+
                 assert (
-                    "dataclass" in decorator_names
-                    or "StrEnum" in base_names
-                    or "Enum" in base_names
+                    is_enum or is_dataclass
                 ), f"Domain type {node.name} in {py_file.name} must be a dataclass or Enum"
+
+                if is_dataclass:
+                    method_names = {
+                        item.name
+                        for item in node.body
+                        if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef)
+                    }
+                    assert (
+                        "__post_init__" in method_names
+                    ), f"Dataclass {node.name} in {py_file.name} must define __post_init__ guard"
     assert entities_audited > 0, "No domain models found in core.domain"
