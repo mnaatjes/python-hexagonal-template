@@ -6,8 +6,10 @@ import os
 import platform
 import sys
 
+from ...core.ports.driven.probe_port import SystemProbePort
 
-class OsSystemProbeAdapter:
+
+class OsSystemProbeAdapter(SystemProbePort):
     """Probes system environment and resources using Python standard library."""
 
     def is_operational(self) -> bool:

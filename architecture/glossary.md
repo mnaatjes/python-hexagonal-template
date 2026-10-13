@@ -104,3 +104,41 @@ This document establishes the authoritative vocabulary, system planes, and bound
 ### 12. Stateless Interactor
 * **Definition:** The structural guarantee that a use case instance holds no mutable workflow state across separate invocations.
 * **Invariant:** Instance attributes assigned during `__init__` are restricted strictly to injected driven port dependencies and static configuration. Methods must never assign to `self.*` during execution, guaranteeing safety when use cases are registered as singletons in concurrent async or multithreaded runtimes.
+
+### 13. Port (Boundary Contract)
+* **Definition:** An abstract specification residing in `core/ports/` (`driving/` or `driven/`) that defines a protocol boundary between the inside of the application and the outside world.
+* **Invariant:** A port is owned strictly by the core application. It contains zero implementation code (method bodies are strictly `...` or `pass`), zero vendor-specific keywords in its nomenclature, and accepts/returns only pure domain DTOs, value objects, and standard library primitives.
+
+### 14. Driving Port (Primary / Inbound Port)
+* **Definition:** A port contract residing in `core/ports/driving/` defining an operation that the application exposes to external actors.
+* **Invariant:** Implemented by use cases or application services (`CheckHealthUseCase`). Invoked by driving adapters (`CliHealthAdapter`, HTTP routes).
+
+### 15. Driven Port (Secondary / Outbound Port)
+* **Definition:** A port contract residing in `core/ports/driven/` defining a capability that the application core requires from the outside environment.
+* **Invariant:** Declared by the core. Implemented by external adapters (`OsSystemProbeAdapter`, database repositories). Invoked by use cases to fulfill business workflows.
+
+---
+
+## Four-Level Port-Adapter Architectural Lexicon
+
+This taxonomy establishes the structural layers and governance expectations governing ports, interactors, and adapters across this repository:
+
+### Level 1: Taxonomy / Marker Protocols (`core/ports/base.py`)
+* **Terms:** `Port`, `DrivingPort`, `DrivenPort`.
+* **Role:** Universal architectural tags that categorize boundary contracts. They carry zero domain methods.
+* **Governance & Enforcement:** Strictly enforced in `architecture/rules/hexagonal_truths.yaml` (`HEXA-TRUTH-03`, `HEXA-TRUTH-16`) and validated via `test_boundaries.py`. Downstream developers are prevented by CI from authoring floating ports that fail to inherit from `DrivingPort` or `DrivenPort`.
+
+### Level 2: Domain Port Contracts / Protocols (`core/ports/{driving,driven}/`)
+* **Terms:** `GetHealthPort`, `SystemProbePort` (and downstream: `UserRepositoryPort`, `OrderBillingPort`).
+* **Role:** The abstract contracts specifying the exact method signatures, DTO parameters, and return types required by the core.
+* **Governance & Enforcement:** Defined as pure `@runtime_checkable typing.Protocol` classes. Method bodies must strictly contain `...` or `pass` (`HEXA-TRUTH-16`).
+
+### Level 3: Application Interactors / Use Cases (`core/use_cases/`)
+* **Terms:** `CheckHealthUseCase`.
+* **Role:** The pure application orchestrator. Implements Level 2 driving ports, receives Level 2 driven ports via constructor DI, and coordinates Level 0 domain models.
+* **Governance & Enforcement:** Self-documenting by default in starter scaffolding (e.g. `class CheckHealthUseCase(GetHealthPort):`). Verified structurally via `mypy --strict`.
+
+### Level 4: Concrete Adapters (`adapters/{driving,driven}/`)
+* **Terms:** `OsSystemProbeAdapter`, `CliHealthAdapter` (and downstream: `PostgresUserRepository`, `FastApiHealthRoute`).
+* **Role:** The real-world implementations that interface with operating systems, databases, network sockets, and CLIs. They implement Level 2 driven ports or invoke Level 2 driving ports.
+* **Governance & Enforcement:** Self-documenting by default in starter scaffolding (e.g. `class OsSystemProbeAdapter(SystemProbePort):`). Verified structurally via `mypy --strict`, preserving flexibility for external and third-party libraries.

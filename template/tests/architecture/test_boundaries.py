@@ -75,9 +75,12 @@ def test_ports_are_abstract_protocols_or_abcs() -> None:
                 for b in node.bases:
                     if isinstance(b, ast.Attribute):
                         base_names.add(b.attr)
-                assert (
-                    "Protocol" in base_names or "ABC" in base_names
-                ), f"Port class {node.name} in {py_file.name} must inherit from Protocol or ABC"
+                valid_bases = {"Protocol", "ABC", "Port", "DrivingPort", "DrivenPort"}
+                err_msg = (
+                    f"Port class {node.name} in {py_file.name} must inherit from Protocol, "
+                    "ABC, or Port marker"
+                )
+                assert any(b in valid_bases for b in base_names), err_msg
         assert classes_found > 0, f"Port file {py_file.name} contains no Protocol or ABC classes"
 
 
@@ -378,3 +381,103 @@ def test_use_cases_do_not_bypass_ports_with_direct_io() -> None:
                 assert (
                     node.module.split(".")[0] not in forbidden_io
                 ), f"Use case {py_file.name} imports direct I/O library: {node.module}"
+
+
+def test_ports_have_zero_implementation_code() -> None:
+    """Asserts that port contracts contain zero concrete implementation code or initializers."""
+    pkg_root = _get_package_root()
+    ports_dir = pkg_root / "core" / "ports"
+
+    for py_file in ports_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef):
+                        assert item.name != "__init__", f"Port {node.name} must not define __init__"
+                        # Body must consist of docstring, Pass, or Expr(Constant(...))
+                        for stmt in item.body:
+                            is_docstring = isinstance(stmt, ast.Expr) and isinstance(
+                                stmt.value, ast.Constant
+                            )
+                            is_ellipsis = (
+                                isinstance(stmt, ast.Expr)
+                                and isinstance(stmt.value, ast.Constant)
+                                and stmt.value.value is ...
+                            )
+                            is_pass = isinstance(stmt, ast.Pass)
+                            err_msg = f"Port method {item.name} contains implementation code"
+                            assert is_docstring or is_ellipsis or is_pass, err_msg
+
+
+def test_ports_follow_technology_agnostic_nomenclature() -> None:
+    """Asserts that port class names end with Port and contain no vendor/technology keywords."""
+    pkg_root = _get_package_root()
+    ports_dir = pkg_root / "core" / "ports"
+    forbidden_tech = (
+        "Sql",
+        "Postgres",
+        "Mysql",
+        "Sqlite",
+        "Redis",
+        "Mongo",
+        "Http",
+        "FastApi",
+        "Flask",
+        "Kafka",
+        "Rabbit",
+        "Aws",
+        "S3",
+    )
+
+    for py_file in ports_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                assert node.name.endswith(
+                    "Port"
+                ), f"Port class {node.name} in {py_file.name} must end with 'Port'"
+                for tech in forbidden_tech:
+                    assert (
+                        tech not in node.name
+                    ), f"Port class {node.name} contains technology keyword '{tech}'"
+
+
+def test_ports_adhere_to_strict_import_whitelist() -> None:
+    """Asserts that port files only import from allowed standard typing and domain modules."""
+    pkg_root = _get_package_root()
+    ports_dir = pkg_root / "core" / "ports"
+    pkg_name = pkg_root.name
+    allowed_modules = {
+        "__future__",
+        "typing",
+        "abc",
+        "collections.abc",
+        "datetime",
+        "uuid",
+        "enum",
+    }
+
+    for py_file in ports_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    root_mod = alias.name.split(".")[0]
+                    assert (
+                        root_mod in allowed_modules
+                    ), f"Port file {py_file.name} imports unauthorized module: {alias.name}"
+            elif isinstance(node, ast.ImportFrom):
+                if node.level and node.level > 0:
+                    continue  # relative imports within core.ports are permitted
+                if node.module:
+                    root_mod = node.module.split(".")[0]
+                    is_domain = node.module.startswith(f"{pkg_name}.core.domain")
+                    is_ports = node.module.startswith(f"{pkg_name}.core.ports")
+                    assert (
+                        root_mod in allowed_modules or is_domain or is_ports
+                    ), f"Port file {py_file.name} imports unauthorized module: {node.module}"

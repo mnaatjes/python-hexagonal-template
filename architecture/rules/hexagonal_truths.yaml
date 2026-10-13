@@ -304,3 +304,54 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_use_cases_do_not_bypass_ports_with_direct_io"
+
+  - id: "HEXA-TRUTH-16"
+    name: "Zero Implementation Code in Ports"
+    summary: "Ports must be purely abstract contracts; method bodies must strictly contain ellipses or pass without __init__ or state initializers."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_have_zero_implementation_code"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-16"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-16"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_have_zero_implementation_code"
+
+  - id: "HEXA-TRUTH-17"
+    name: "Technology-Agnostic Port Nomenclature"
+    summary: "Port class names must end with 'Port' and never contain vendor or technology keywords like Sql, Http, or Redis."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_follow_technology_agnostic_nomenclature"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-17"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-17"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_follow_technology_agnostic_nomenclature"
+
+  - id: "HEXA-TRUTH-18"
+    name: "Strict Port Package Import Whitelist"
+    summary: "Ports must exclusively import standard typing primitives and pure core.domain models, preventing adapter or framework leakage."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_adhere_to_strict_import_whitelist"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-18"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-18"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_ports_adhere_to_strict_import_whitelist"

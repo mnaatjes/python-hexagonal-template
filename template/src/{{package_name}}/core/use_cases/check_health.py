@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from {{package_name}}.core.domain.health import HealthStatus, SystemHealth
-from {{package_name}}.core.ports.driven.probe_port import SystemProbePort
+from ..domain.health import HealthStatus, SystemHealth
+from ..ports.driven.probe_port import SystemProbePort
+from ..ports.driving.health_port import GetHealthPort
 
 
-class CheckHealthUseCase:
+class CheckHealthUseCase(GetHealthPort):
     """Interacts with driven probe ports to evaluate overall system health."""
 
     def __init__(self, probe: SystemProbePort, service_name: str) -> None:

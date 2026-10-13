@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import runtime_checkable
+
+from ..base import DrivenPort
 
 
 @runtime_checkable
-class SystemProbePort(Protocol):
+class SystemProbePort(DrivenPort):
     """Secondary port implemented by OS or infrastructure adapters."""
 
     def is_operational(self) -> bool:
