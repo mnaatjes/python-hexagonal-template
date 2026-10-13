@@ -75,3 +75,11 @@ When authoring or modifying code within this service, coding assistants must str
 ## HEXA-TRUTH-19: Composition Root Isolation
 * Core layers (`core/domain/`, `core/ports/`, `core/use_cases/`) and adapters (`adapters/`) must never import from `bootstrap/`.
 * The composition root (`bootstrap/container.py`) is the sole structural authority for instantiating adapters and wiring dependencies into use cases.
+
+## HEXA-TRUTH-20: Driving Port Directional Integrity & Use Case Exclusivity
+* Driving ports must reside in `core/ports/driving/` and inherit from `DrivingPort`.
+* Driving ports are implemented strictly by application use cases (`core/use_cases/`). Adapters must never implement driving ports.
+
+## HEXA-TRUTH-21: Driven Port Inversion & Injection Governance
+* Driven ports must reside in `core/ports/driven/` and inherit from `DrivenPort`.
+* Driven ports are implemented strictly by driven adapters (`adapters/driven/`). Use cases must accept driven ports via constructor dependency injection (`__init__`) and never implement them.

@@ -374,3 +374,37 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_composition_root_isolation"
+
+  - id: "HEXA-TRUTH-20"
+    name: "Driving Port Directional Integrity & Use Case Exclusivity"
+    summary: "Driving ports must reside in core/ports/driving/, inherit DrivingPort, and be implemented exclusively by application use cases."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_directional_integrity_and_exclusivity"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-20"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-20"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driving_ports_directional_integrity_and_exclusivity"
+
+  - id: "HEXA-TRUTH-21"
+    name: "Driven Port Inversion & Injection Governance"
+    summary: "Driven ports must reside in core/ports/driven/, inherit DrivenPort, and be implemented exclusively by driven adapters while injected via use case constructors."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_inversion_and_injection_governance"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-21"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-21"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_driven_ports_inversion_and_injection_governance"

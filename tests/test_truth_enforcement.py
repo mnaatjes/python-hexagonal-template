@@ -368,3 +368,83 @@ def test_downstream_negative_mutation_bootstrap_import_leakage(
     assert res.returncode != 0
     err_needle = "illegally imports bootstrap"
     assert err_needle in res.stdout or err_needle in res.stderr
+
+
+def test_downstream_negative_mutation_adapter_implements_driving_port(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that an adapter illegally implementing a driving port fails."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    adapter_file = pkg_dir / "adapters" / "driving" / "cli_health.py"
+
+    # Inject illegal driving port inheritance into adapter
+    adapter_file.write_text(
+        "from ...core.ports.driving.health_port import GetHealthPort\n\n"
+        "class CliHealthAdapter(GetHealthPort):\n"
+        "    def check_health(self):\n"
+        "        pass\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "illegally implements driving port"
+    assert err_needle in res.stdout or err_needle in res.stderr
+
+
+def test_downstream_negative_mutation_use_case_implements_driven_port(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that a use case illegally implementing a driven port fails."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    uc_file = pkg_dir / "core" / "use_cases" / "check_health.py"
+
+    # Inject illegal driven port inheritance into use case
+    uc_file.write_text(
+        "from ..ports.driven.probe_port import SystemProbePort\n\n"
+        "class CheckHealthUseCase(SystemProbePort):\n"
+        "    def probe_system(self):\n"
+        "        pass\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "illegally implements driven port"
+    assert err_needle in res.stdout or err_needle in res.stderr

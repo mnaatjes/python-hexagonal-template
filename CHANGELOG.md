@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Template Python Purity Directive codified in `.gemini/rules/template_python_purity.md`, permanently eliminating `.jinja` source files from `template/src/` via pure intra-package relative imports.
 - Codified and quad-plane enforced `HEXA-TRUTH-19` (Composition Root Isolation) forbidding core layers and adapters from importing `bootstrap`.
 - Completed Step 3 of Health Service Walking Skeleton (SDD-0003) implementing pure Python `CliHealthAdapter` driving adapter and `Container` composition root wiring.
+- Adopted ADR 0004 and SDD-0004 establishing directional port boundary governance and 8-truth specification (`HEXA-TRUTH-20` through `HEXA-TRUTH-27`).
+- Codified and quad-plane enforced `HEXA-TRUTH-20` (Driving Port Directional Integrity & Use Case Exclusivity) and `HEXA-TRUTH-21` (Driven Port Inversion & Injection Governance).
+
 
 
 ## [0.1.0] - 2026-10-12

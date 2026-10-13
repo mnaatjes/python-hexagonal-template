@@ -513,3 +513,85 @@ def test_composition_root_isolation() -> None:
                     if node.level and node.level > 1 and node.module and "bootstrap" in node.module:
                         err = f"File {py_file.name} illegally imports bootstrap: {node.module}"
                         raise AssertionError(err)
+
+
+def test_driving_ports_directional_integrity_and_exclusivity() -> None:
+    """Asserts that driving ports inherit DrivingPort and adapters never implement them."""
+    pkg_root = _get_package_root()
+    driving_ports_dir = pkg_root / "core" / "ports" / "driving"
+    adapters_dir = pkg_root / "adapters"
+
+    driving_port_classes: set[str] = set()
+
+    for py_file in driving_ports_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                driving_port_classes.add(node.name)
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
+                assert (
+                    "DrivingPort" in base_names
+                ), f"Driving port {node.name} in {py_file.name} must inherit from DrivingPort"
+
+    # Assert adapters never implement driving ports
+    for py_file in adapters_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
+                violating = base_names.intersection(driving_port_classes)
+                assert not violating, (
+                    f"Adapter class {node.name} in {py_file.name} illegally implements "
+                    f"driving port(s): {violating}"
+                )
+
+
+def test_driven_ports_inversion_and_injection_governance() -> None:
+    """Asserts that driven ports inherit DrivenPort and use cases never implement them."""
+    pkg_root = _get_package_root()
+    driven_ports_dir = pkg_root / "core" / "ports" / "driven"
+    use_cases_dir = pkg_root / "core" / "use_cases"
+
+    driven_port_classes: set[str] = set()
+
+    for py_file in driven_ports_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                driven_port_classes.add(node.name)
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
+                assert (
+                    "DrivenPort" in base_names
+                ), f"Driven port {node.name} in {py_file.name} must inherit from DrivenPort"
+
+    # Assert use cases never implement driven ports
+    for py_file in use_cases_dir.rglob("*.py"):
+        if py_file.name == "__init__.py":
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
+                violating = base_names.intersection(driven_port_classes)
+                assert not violating, (
+                    f"Use case {node.name} in {py_file.name} illegally implements "
+                    f"driven port(s): {violating}"
+                )

@@ -186,3 +186,21 @@ This reference documents the governing architectural invariants ("Truths") enfor
   * `.importlinter`: Contract `composition_root_isolation` strictly forbids imports of `bootstrap` from `core` and `adapters`.
   * `pytest_archon`: `test_composition_root_isolation` AST test asserts zero bootstrap imports in core and adapter packages.
 * **Remediation:** Remove `bootstrap` imports from core and adapter files. Pass dependencies into constructors via dependency injection configured inside `bootstrap/container.py`.
+
+---
+
+### HEXA-TRUTH-20: Driving Port Directional Integrity & Use Case Exclusivity
+
+* **Definition:** Driving ports define the application's exposed capabilities. They must reside in `core/ports/driving/`, inherit from `DrivingPort`, and be implemented exclusively by application use cases in `core/use_cases/`. Adapters must never implement driving ports (driving adapters invoke them).
+* **Enforcement:**
+  * `pytest_archon`: `test_driving_ports_directional_integrity_and_exclusivity`.
+* **Remediation:** Ensure port contracts in `core/ports/driving/` inherit from `DrivingPort`. Move any adapter implementing a driving port into `core/use_cases/` or convert the adapter into a consumer calling the port.
+
+---
+
+### HEXA-TRUTH-21: Driven Port Inversion & Injection Governance
+
+* **Definition:** Driven ports define the SPI dependencies the application requires from the environment. They must reside in `core/ports/driven/`, inherit from `DrivenPort`, and be implemented exclusively by driven adapters in `adapters/driven/`. Use cases must never implement driven ports and must accept them strictly via constructor dependency injection (`__init__`).
+* **Enforcement:**
+  * `pytest_archon`: `test_driven_ports_inversion_and_injection_governance`.
+* **Remediation:** Ensure port contracts in `core/ports/driven/` inherit from `DrivenPort`. Ensure driven adapters implement the port, and inject the port interface into use cases via `__init__`.
