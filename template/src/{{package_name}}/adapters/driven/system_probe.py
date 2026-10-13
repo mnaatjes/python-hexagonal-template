@@ -6,7 +6,7 @@ import os
 import platform
 import sys
 
-from {{package_name}}.core.ports.driven.probe_port import SystemProbePort
+from ...core.ports.driven.probe_port import SystemProbePort
 
 
 class OsSystemProbeAdapter(SystemProbePort):

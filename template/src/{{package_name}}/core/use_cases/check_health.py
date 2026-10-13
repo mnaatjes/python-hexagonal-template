@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from {{package_name}}.core.domain.health import HealthStatus, SystemHealth
-from {{package_name}}.core.ports.driven.probe_port import SystemProbePort
-from {{package_name}}.core.ports.driving.health_port import GetHealthPort
+from ..domain.health import HealthStatus, SystemHealth
+from ..ports.driven.probe_port import SystemProbePort
+from ..ports.driving.health_port import GetHealthPort
 
 
 class CheckHealthUseCase(GetHealthPort):
@@ -13,7 +13,6 @@ class CheckHealthUseCase(GetHealthPort):
     def __init__(self, probe: SystemProbePort, service_name: str) -> None:
         self._probe = probe
         self._service_name = service_name
-
 
     def check_health(self) -> SystemHealth:
         """Executes operational probe check and produces immutable SystemHealth DTO."""

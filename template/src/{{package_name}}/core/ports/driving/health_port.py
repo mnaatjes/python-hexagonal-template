@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import runtime_checkable
 
-from {{ package_name }}.core.domain.health import SystemHealth
-from {{ package_name }}.core.ports.base import DrivingPort
+from ...domain.health import SystemHealth
+from ..base import DrivingPort
 
 
 @runtime_checkable

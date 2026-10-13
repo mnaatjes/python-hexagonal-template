@@ -71,9 +71,9 @@ def test_downstream_health_domain_and_ports_exist(rendered_downstream: Path) -> 
     assert health_port.is_file()
     assert probe_port.is_file()
 
-    # Assert rendered Jinja namespace variables
+    # Assert pure Python relative imports
     port_content = health_port.read_text(encoding="utf-8")
-    assert "from hexagonal_service.core.domain.health import SystemHealth" in port_content
+    assert "from ...domain.health import SystemHealth" in port_content
     assert "{{" not in port_content
 
 
@@ -105,10 +105,13 @@ def test_downstream_health_use_case_and_probe_exist(rendered_downstream: Path) -
     assert probe_adapter.is_file()
 
     uc_content = use_case.read_text(encoding="utf-8")
-    assert (
-        "from hexagonal_service.core.domain.health import HealthStatus, SystemHealth" in uc_content
-    )
+    assert "from ..domain.health import HealthStatus, SystemHealth" in uc_content
+    assert "class CheckHealthUseCase(GetHealthPort):" in uc_content
     assert "{{" not in uc_content
+
+    probe_content = probe_adapter.read_text(encoding="utf-8")
+    assert "class OsSystemProbeAdapter(SystemProbePort):" in probe_content
+    assert "{{" not in probe_content
 
 
 def test_downstream_negative_mutation_lifecycle_pollution(rendered_downstream: Path) -> None:
