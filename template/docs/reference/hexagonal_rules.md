@@ -149,3 +149,30 @@ This reference documents the governing architectural invariants ("Truths") enfor
 * **Enforcement:**
   * `pytest_archon`: `test_use_cases_do_not_bypass_ports_with_direct_io`.
 * **Remediation:** Create a driven port contract for the required I/O operation and implement it within an adapter in `adapters/driven/`.
+
+---
+
+### HEXA-TRUTH-16: Zero Implementation Code in Ports
+
+* **Definition:** Ports in `core/ports/` are pure behavioral specifications. Method bodies must strictly contain ellipses (`...`) or `pass`. Ports must never define concrete attributes, initializers (`__init__`), or business logic.
+* **Enforcement:**
+  * `pytest_archon`: `test_ports_have_zero_implementation_code`.
+* **Remediation:** Remove implementation logic from port methods, replacing bodies with `...`. Move concrete code into an adapter.
+
+---
+
+### HEXA-TRUTH-17: Technology-Agnostic Port Nomenclature
+
+* **Definition:** Ports represent pure application capabilities and must be named without vendor or infrastructure keywords. Port class names must end with `Port` and never include terms like `Sql`, `Postgres`, `Redis`, `Http`, `FastApi`, or `Mongo`.
+* **Enforcement:**
+  * `pytest_archon`: `test_ports_follow_technology_agnostic_nomenclature`.
+* **Remediation:** Rename the port to describe the domain intention (e.g. `UserRepositoryPort` instead of `PostgresUserPort`).
+
+---
+
+### HEXA-TRUTH-18: Strict Port Package Import Whitelist
+
+* **Definition:** Port contracts must only import from standard typing and domain namespaces (`typing`, `abc`, `collections.abc`, standard primitives, and `core.domain`). Ports must never import external frameworks, database drivers, or adapter modules.
+* **Enforcement:**
+  * `pytest_archon`: `test_ports_adhere_to_strict_import_whitelist`.
+* **Remediation:** Remove external imports from port files. Map external payloads to pure domain types before passing them through ports.

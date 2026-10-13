@@ -62,3 +62,12 @@ When authoring or modifying code within this service, coding assistants must str
 
 ## HEXA-TRUTH-15: Zero Direct I/O Bypass
 * Never execute direct network calls (`requests`, `httpx`) or raw I/O in use cases. Route all side effects through Driven Ports.
+
+## HEXA-TRUTH-16: Zero Implementation Code in Ports
+* Port method bodies must contain strictly `...` or `pass`. Never declare `__init__`, concrete state, or logic in ports.
+
+## HEXA-TRUTH-17: Technology-Agnostic Port Nomenclature
+* Name port classes ending with `Port`. Never include technology names (`Sql`, `Http`, `Redis`, `Mongo`) in port class names.
+
+## HEXA-TRUTH-18: Strict Port Package Import Whitelist
+* Port files must only import from `typing`, `abc`, `collections.abc`, standard primitives, and `core.domain`.

@@ -239,6 +239,60 @@ def test_downstream_negative_mutation_use_case_transport_leakage(
     )
 
 
+def test_downstream_port_markers_exist(rendered_downstream: Path) -> None:
+    """Positive test: verifies that Port marker protocols render in core/ports/base.py."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    base_file = pkg_dir / "core" / "ports" / "base.py"
+    assert base_file.is_file()
+    content = base_file.read_text(encoding="utf-8")
+    assert "class Port(Protocol):" in content
+    assert "class DrivingPort(Port):" in content
+    assert "class DrivenPort(Port):" in content
+
+
+def test_downstream_negative_mutation_port_concrete_code(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that adding concrete code into a port fails boundary tests."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    probe_port = pkg_dir / "core" / "ports" / "driven" / "probe_port.py"
+
+    # Inject concrete code into port
+    probe_port.write_text(
+        "from typing import runtime_checkable\n"
+        "from ..base import DrivenPort\n\n"
+        "@runtime_checkable\n"
+        "class SystemProbePort(DrivenPort):\n"
+        "    def is_operational(self) -> bool:\n"
+        "        x = 1 + 1\n"
+        "        return True\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "contains implementation code"
+    assert err_needle in res.stdout or err_needle in res.stderr
+
+
 def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) -> None:
     """Verifies that downstream test_boundaries.py executes and passes on pristine render."""
     repo_root = Path(__file__).parent.parent

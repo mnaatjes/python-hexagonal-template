@@ -104,3 +104,15 @@ This document establishes the authoritative vocabulary, system planes, and bound
 ### 12. Stateless Interactor
 * **Definition:** The structural guarantee that a use case instance holds no mutable workflow state across separate invocations.
 * **Invariant:** Instance attributes assigned during `__init__` are restricted strictly to injected driven port dependencies and static configuration. Methods must never assign to `self.*` during execution, guaranteeing safety when use cases are registered as singletons in concurrent async or multithreaded runtimes.
+
+### 13. Port (Boundary Contract)
+* **Definition:** An abstract specification residing in `core/ports/` (`driving/` or `driven/`) that defines a protocol boundary between the inside of the application and the outside world.
+* **Invariant:** A port is owned strictly by the core application. It contains zero implementation code (method bodies are strictly `...` or `pass`), zero vendor-specific keywords in its nomenclature, and accepts/returns only pure domain DTOs, value objects, and standard library primitives.
+
+### 14. Driving Port (Primary / Inbound Port)
+* **Definition:** A port contract residing in `core/ports/driving/` defining an operation that the application exposes to external actors.
+* **Invariant:** Implemented by use cases or application services (`CheckHealthUseCase`). Invoked by driving adapters (`CliHealthAdapter`, HTTP routes).
+
+### 15. Driven Port (Secondary / Outbound Port)
+* **Definition:** A port contract residing in `core/ports/driven/` defining a capability that the application core requires from the outside environment.
+* **Invariant:** Declared by the core. Implemented by external adapters (`OsSystemProbeAdapter`, database repositories). Invoked by use cases to fulfill business workflows.
