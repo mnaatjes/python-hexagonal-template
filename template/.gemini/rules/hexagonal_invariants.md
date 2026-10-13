@@ -46,3 +46,19 @@ When authoring or modifying code within this service, coding assistants must str
 
 ## HEXA-TRUTH-10: Self-Validating Entity Invariants
 * Domain models must enforce validity at instantiation using `@dataclass(frozen=True)` or validation checks.
+
+## HEXA-TRUTH-11: Lexical & Structural Use Case Invariants
+* Name use case classes as `^[A-Z][a-zA-Z0-9]+UseCase$` starting with an imperative verb (`Check`, `Get`, `Create`, `Process`).
+* Always define constructor dependency injection in `__init__`.
+
+## HEXA-TRUTH-12: Inversion of Control & Zero Concrete Instantiation
+* Never instantiate or import concrete adapters inside use cases. Dependencies must be injected as abstract driven ports.
+
+## HEXA-TRUTH-13: Transport & Framework Agnosticism in Use Cases
+* Never import web frameworks (`fastapi`, `flask`), CLI libraries (`typer`, `click`), or transport exceptions inside use cases.
+
+## HEXA-TRUTH-14: Stateless Interactor Invariants
+* Use cases must be stateless. Never assign or mutate `self.*` attributes outside `__init__`.
+
+## HEXA-TRUTH-15: Zero Direct I/O Bypass
+* Never execute direct network calls (`requests`, `httpx`) or raw I/O in use cases. Route all side effects through Driven Ports.

@@ -197,6 +197,48 @@ def test_downstream_negative_mutation_domain_port_isolation(
     assert err_needle in res.stdout or err_needle in res.stderr
 
 
+def test_downstream_negative_mutation_use_case_transport_leakage(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that importing web/transport frameworks in use cases fails."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    uc_file = pkg_dir / "core" / "use_cases" / "check_health.py"
+
+    # Inject fastapi transport import into use case
+    uc_file.write_text(
+        "from fastapi import HTTPException\n\n"
+        "class CheckHealthUseCase:\n"
+        "    def __init__(self) -> None:\n"
+        "        pass\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    assert (
+        "imports transport module: fastapi" in res.stdout
+        or "imports transport module: fastapi" in res.stderr
+    )
+
+
 def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) -> None:
     """Verifies that downstream test_boundaries.py executes and passes on pristine render."""
     repo_root = Path(__file__).parent.parent
