@@ -56,14 +56,17 @@ graph TD
 ### 3.1 HEXA-TRUTH-28: DTO Immutability & Structural Purity
 * **Summary:** Data Transfer Objects defined in `core/ports/` must be decorated with `@dataclass(frozen=True)` (or inherit `DataTransferObject`), contain type-annotated fields composed strictly of primitives, frozen DTOs, or domain value objects, and contain zero executable business methods.
 * **AST Visitor Specifications:**
-  1. **Decorator Invariant:**
+  1. **Topological Location Invariant:**
+     * Inspect all modules in `adapters/` and `core/domain/`.
+     * Assert that zero classes are defined with name suffixes `DTO`, `Command`, `Query` or inherit from `DataTransferObject`.
+  2. **Decorator Invariant:**
      * Inspect all classes defined in `core/ports/**/dtos.py` or classes named with suffix `DTO` / `Command` / `Query`.
      * Assert that the class is decorated with `@dataclass(frozen=True)` or `@dataclass(frozen=True, slots=True)`.
-  2. **Immutability Invariant:**
+  3. **Immutability Invariant:**
      * Assert that DTO field types are not mutable primitives (`list`, `dict`, `set`). Allowed alternatives are `tuple`, `frozenset`, or frozen nested DTOs.
-  3. **Method Restriction Invariant:**
+  4. **Method Restriction Invariant:**
      * Assert that DTO classes contain only `__init__`, `__post_init__`, or property getters. Business calculation methods and side-effecting operations are strictly forbidden.
-  4. **Prohibited Type Blacklist:**
+  5. **Prohibited Type Blacklist:**
      * Field type annotations must not reference:
        * ORM base classes (`Base`, `Model`, `SQLModel`).
        * Web/Transport frameworks (`Request`, `Response`, `UploadFile`, `Context`).

@@ -258,3 +258,12 @@ This reference documents the governing architectural invariants ("Truths") enfor
 * **Enforcement:**
   * `pytest_archon`: `test_driven_ports_test_double_parity`.
 * **Remediation:** Author an in-memory double (e.g. `FakeSystemProbeAdapter`) in `tests/doubles/` using Python standard library collections (`dict`, `list`).
+
+---
+
+### HEXA-TRUTH-28: DTO Immutability & Structural Purity
+
+* **Definition:** Data Transfer Objects crossing port boundaries must reside in `core/ports/` (co-located with driving or driven ports), be decorated as `@dataclass(frozen=True)` (or inherit `DataTransferObject`), and contain only whitelisted primitive scalars, immutable collections (`tuple`, `frozenset`), and domain value objects. DTOs must never contain mutable collections (`list`, `dict`), framework types, ORM models, or business methods.
+* **Enforcement:**
+  * `pytest_archon`: `test_dto_immutability_and_structural_purity`.
+* **Remediation:** Decorate DTO classes with `@dataclass(frozen=True, slots=True)`, convert mutable lists or dicts into tuples or frozensets, and remove external framework imports.

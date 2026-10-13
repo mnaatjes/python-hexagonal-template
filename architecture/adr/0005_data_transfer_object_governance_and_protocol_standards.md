@@ -55,6 +55,7 @@ DTOs canonically reside inside `core/ports/` co-located with the boundary they s
 * **Forbidden Locations:**
   * Strictly forbidden in `adapters/` (preserves inward dependency rule).
   * Strictly forbidden in `core/domain/` (entities encapsulate business logic, while DTOs are passive data carriers).
+  * Mechanically enforced via AST analysis: any class ending with `DTO`, `Command`, `Query` or subclassing `DataTransferObject` outside `core/ports/` triggers an immediate CI failure.
 
 ### 3. Permitted and Prohibited Types Specification
 
