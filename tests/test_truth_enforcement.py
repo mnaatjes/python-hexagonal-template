@@ -570,3 +570,40 @@ def test_downstream_negative_mutation_mutable_dto_field(rendered_downstream: Pat
     assert res.returncode != 0
     err_needle = "uses forbidden mutable/framework type"
     assert err_needle in res.stdout or err_needle in res.stderr
+
+
+def test_downstream_negative_mutation_dto_in_forbidden_adapters(rendered_downstream: Path) -> None:
+    """Negative test: asserts that defining a DTO in adapters/ fails HEXA-TRUTH-28."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    dto_file = pkg_dir / "adapters" / "driving" / "illegal_dto.py"
+
+    dto_file.write_text(
+        "from dataclasses import dataclass\n\n"
+        "@dataclass(frozen=True)\n"
+        "class RequestDTO:\n"
+        "    id: str\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "illegally declared in forbidden topology"
+    assert err_needle in res.stdout or err_needle in res.stderr

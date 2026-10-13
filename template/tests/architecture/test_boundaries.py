@@ -754,9 +754,12 @@ def test_driven_ports_test_double_parity() -> None:
 
 
 def test_dto_immutability_and_structural_purity() -> None:
-    """Asserts that DTOs in core/ports are frozen and do not use mutable or framework types."""
+    """Asserts that DTOs reside strictly in core/ports, are frozen, and do not use mutable types."""
     pkg_root = _get_package_root()
     ports_dir = pkg_root / "core" / "ports"
+    adapters_dir = pkg_root / "adapters"
+    domain_dir = pkg_root / "core" / "domain"
+
     forbidden_field_types = {
         "list",
         "dict",
@@ -769,43 +772,78 @@ def test_dto_immutability_and_structural_purity() -> None:
         "Cursor",
     }
 
+    # 1. Assert no DTOs are declared in forbidden locations (adapters/ or core/domain/)
+    for forbidden_dir in (adapters_dir, domain_dir):
+        if not forbidden_dir.exists():
+            continue
+        for py_file in forbidden_dir.rglob("*.py"):
+            if py_file.name == "__init__.py":
+                continue
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                    for b in node.bases:
+                        if isinstance(b, ast.Attribute):
+                            base_names.add(b.attr)
+                    is_dto = (
+                        node.name.endswith("DTO")
+                        or node.name.endswith("Command")
+                        or node.name.endswith("Query")
+                        or "DataTransferObject" in base_names
+                    )
+                    rel_path = py_file.relative_to(pkg_root)
+                    assert not is_dto, (
+                        f"DTO {node.name} illegally declared in forbidden topology: {rel_path}. "
+                        "DTOs must reside strictly within core/ports/."
+                    )
+
+    # 2. Assert structural purity and immutability for all DTOs in core/ports/
     for py_file in ports_dir.rglob("*.py"):
         if py_file.name in ("__init__.py", "base.py"):
             continue
         tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef) and (
-                node.name.endswith("DTO")
-                or node.name.endswith("Command")
-                or node.name.endswith("Query")
-            ):
-                # Assert frozen dataclass decorator
-                is_frozen = False
-                for dec in node.decorator_list:
-                    if isinstance(dec, ast.Call):
-                        func_name = None
-                        if isinstance(dec.func, ast.Name):
-                            func_name = dec.func.id
-                        elif isinstance(dec.func, ast.Attribute):
-                            func_name = dec.func.attr
-                        if func_name == "dataclass":
-                            for kw in dec.keywords:
-                                if kw.arg == "frozen" and isinstance(kw.value, ast.Constant):
-                                    if kw.value.value is True:
-                                        is_frozen = True
-                assert is_frozen, (
-                    f"DTO class {node.name} in {py_file.name} must be decorated with "
-                    "@dataclass(frozen=True)"
-                )
+            if isinstance(node, ast.ClassDef):
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
 
-                # Assert field types are not mutable
-                for item in node.body:
-                    if isinstance(item, ast.AnnAssign):
-                        ann_id = None
-                        if isinstance(item.annotation, ast.Name):
-                            ann_id = item.annotation.id
-                        elif isinstance(item.annotation, ast.Attribute):
-                            ann_id = item.annotation.attr
-                        assert (
-                            ann_id not in forbidden_field_types
-                        ), f"DTO {node.name} field uses forbidden mutable/framework type: {ann_id}"
+                if (
+                    node.name.endswith("DTO")
+                    or node.name.endswith("Command")
+                    or node.name.endswith("Query")
+                    or "DataTransferObject" in base_names
+                ):
+                    # Assert frozen dataclass decorator
+                    is_frozen = False
+                    for dec in node.decorator_list:
+                        if isinstance(dec, ast.Call):
+                            func_name = None
+                            if isinstance(dec.func, ast.Name):
+                                func_name = dec.func.id
+                            elif isinstance(dec.func, ast.Attribute):
+                                func_name = dec.func.attr
+                            if func_name == "dataclass":
+                                for kw in dec.keywords:
+                                    if kw.arg == "frozen" and isinstance(kw.value, ast.Constant):
+                                        if kw.value.value is True:
+                                            is_frozen = True
+                    assert is_frozen, (
+                        f"DTO class {node.name} in {py_file.name} must be decorated with "
+                        "@dataclass(frozen=True)"
+                    )
+
+                    # Assert field types are not mutable
+                    for item in node.body:
+                        if isinstance(item, ast.AnnAssign):
+                            ann_id = None
+                            if isinstance(item.annotation, ast.Name):
+                                ann_id = item.annotation.id
+                            elif isinstance(item.annotation, ast.Attribute):
+                                ann_id = item.annotation.attr
+                            assert ann_id not in forbidden_field_types, (
+                                f"DTO {node.name} field uses forbidden mutable/framework type: "
+                                f"{ann_id}"
+                            )
