@@ -31,3 +31,18 @@ When authoring or modifying code within this service, coding assistants must str
 ## HEXA-TRUTH-05: Zero Lifecycle Pollution in Domain
 * Never instantiate threads, process workers, or event loops (`asyncio.run()`, `threading.Thread`) inside `core/domain/` or `core/use_cases/`.
 * Lifecycles, daemon loops, and signal handling belong strictly in driving adapters or bootstrap entrypoints.
+
+## HEXA-TRUTH-06: Domain-to-Port Isolation
+* Never import `core/ports/` or `core/use_cases/` inside `core/domain/`. Domain entities exist independently of port abstractions and use case interactors.
+
+## HEXA-TRUTH-07: Business Exception Sovereignty
+* All business exceptions must inherit from `DomainError` in `core/domain/exceptions.py`. Never catch or raise infrastructure errors in domain models.
+
+## HEXA-TRUTH-08: Zero Global Mutable State in Domain
+* Never declare mutable module-level variables (lists, dicts, sets, caches) in `core/domain/`.
+
+## HEXA-TRUTH-09: Pure In-Memory Determinism
+* Domain entities and functions must be deterministic; never access `os.environ` or ambient system state directly. Pass context as function arguments.
+
+## HEXA-TRUTH-10: Self-Validating Entity Invariants
+* Domain models must enforce validity at instantiation using `@dataclass(frozen=True)` or validation checks.

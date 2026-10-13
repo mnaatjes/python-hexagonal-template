@@ -57,3 +57,49 @@ This reference documents the governing architectural invariants ("Truths") enfor
 * **Enforcement:**
   * `pytest_archon`: `test_domain_and_use_cases_have_zero_lifecycle_pollution`.
 * **Remediation:** Move event loops, concurrency management, and thread worker lifecycles into the driving adapter or composition root (`bootstrap/`).
+
+---
+
+### HEXA-TRUTH-06: Domain-to-Port Isolation
+
+* **Definition:** The core domain (`core/domain/`) represents pure business entities and rules. It must never import `core/ports/` or `core/use_cases/`. Domain entities exist independently of port contracts or application orchestration.
+* **Enforcement:**
+  * `.importlinter`: Contract `domain_port_isolation` forbids importing ports or use cases inside domain.
+  * `pytest_archon`: `test_domain_never_imports_ports_or_use_cases`.
+* **Remediation:** Remove port or use case imports from domain entities. Use Cases must orchestrate ports and pass resulting data to domain entities, not vice versa.
+
+---
+
+### HEXA-TRUTH-07: Business Exception Sovereignty
+
+* **Definition:** All business exceptions raised by the domain must inherit from a pure domain root (`core.domain.exceptions.DomainError`). The domain must never catch, inherit from, or re-raise transport-specific or third-party infrastructure exceptions.
+* **Enforcement:**
+  * `pytest_archon`: `test_domain_exceptions_inherit_from_domain_error`.
+* **Remediation:** Define business errors under `core/domain/exceptions.py` inheriting from `DomainError`. Catch infrastructure exceptions in adapters and translate them into domain errors.
+
+---
+
+### HEXA-TRUTH-08: Zero Global Mutable State in Domain
+
+* **Definition:** The core domain must remain pure and free from mutable global singletons, module-level caches, or mutable collections (`list`, `dict`, `set`) assigned at module root.
+* **Enforcement:**
+  * `pytest_archon`: `test_domain_has_zero_global_mutable_state`.
+* **Remediation:** Encapsulate state inside immutable entity instances or value objects. Pass required context as explicit function arguments.
+
+---
+
+### HEXA-TRUTH-09: Pure In-Memory Determinism
+
+* **Definition:** Domain logic and calculations must be deterministic pure functions of their inputs. The domain must never inspect ambient environment variables (`os.environ`) or read unparametrized system state.
+* **Enforcement:**
+  * `pytest_archon`: `test_domain_has_zero_ambient_environment_access`.
+* **Remediation:** Read configuration in the driving adapter or bootstrap container, and pass explicit configuration values into domain constructors or use case methods.
+
+---
+
+### HEXA-TRUTH-10: Self-Validating Entity Invariants
+
+* **Definition:** Domain entities and value objects must enforce their own validity at instantiation time (using `@dataclass(frozen=True)`, `StrEnum`, or `__post_init__` checks). An entity must never exist in an invalid or corrupted state.
+* **Enforcement:**
+  * `pytest_archon`: `test_domain_entities_are_self_validating`.
+* **Remediation:** Add validation guards inside entity constructors or `__post_init__` methods that raise `DomainValidationError` when invariants are breached.

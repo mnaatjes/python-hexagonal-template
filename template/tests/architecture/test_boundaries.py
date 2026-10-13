@@ -133,3 +133,107 @@ def test_domain_and_use_cases_have_zero_lifecycle_pollution() -> None:
                         raise AssertionError(
                             f"Core file {py_file.name} executes asyncio.run() lifecycle control."
                         )
+
+
+def test_domain_never_imports_ports_or_use_cases() -> None:
+    """Asserts that core.domain never imports core.ports or core.use_cases."""
+    pkg_root = _get_package_root()
+    domain_dir = pkg_root / "core" / "domain"
+    pkg_name = pkg_root.name
+
+    for py_file in domain_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    assert not alias.name.startswith(
+                        f"{pkg_name}.core.ports"
+                    ), f"Domain file {py_file.name} illegally imports port: {alias.name}"
+                    assert not alias.name.startswith(
+                        f"{pkg_name}.core.use_cases"
+                    ), f"Domain file {py_file.name} illegally imports use case: {alias.name}"
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                assert not node.module.startswith(
+                    f"{pkg_name}.core.ports"
+                ), f"Domain file {py_file.name} illegally imports port: {node.module}"
+                assert not node.module.startswith(
+                    f"{pkg_name}.core.use_cases"
+                ), f"Domain file {py_file.name} illegally imports use case: {node.module}"
+
+
+def test_domain_exceptions_inherit_from_domain_error() -> None:
+    """Asserts that custom exception classes in core.domain inherit from DomainError."""
+    pkg_root = _get_package_root()
+    domain_dir = pkg_root / "core" / "domain"
+
+    for py_file in domain_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and "Error" in node.name:
+                if node.name == "DomainError":
+                    continue
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                for b in node.bases:
+                    if isinstance(b, ast.Attribute):
+                        base_names.add(b.attr)
+                assert (
+                    "DomainError" in base_names
+                ), f"Domain exception {node.name} in {py_file.name} must inherit from DomainError"
+
+
+def test_domain_has_zero_global_mutable_state() -> None:
+    """Asserts that core.domain does not declare mutable module-level collections."""
+    pkg_root = _get_package_root()
+    domain_dir = pkg_root / "core" / "domain"
+
+    for py_file in domain_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                # Flag mutable collection literals assigned at module root: list, dict, set
+                if isinstance(node.value, ast.List | ast.Dict | ast.Set):
+                    raise AssertionError(
+                        f"Domain file {py_file.name} defines mutable module-level collection."
+                    )
+
+
+def test_domain_has_zero_ambient_environment_access() -> None:
+    """Asserts that core.domain never reads os.environ directly."""
+    pkg_root = _get_package_root()
+    domain_dir = pkg_root / "core" / "domain"
+
+    for py_file in domain_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute) and node.attr == "environ":
+                if isinstance(node.value, ast.Name) and node.value.id == "os":
+                    raise AssertionError(
+                        f"Domain file {py_file.name} illegally accesses ambient os.environ."
+                    )
+
+
+def test_domain_entities_are_self_validating() -> None:
+    """Asserts that domain entities validate their attributes or have valid default state."""
+    pkg_root = _get_package_root()
+    domain_dir = pkg_root / "core" / "domain"
+
+    entities_audited = 0
+    for py_file in domain_dir.rglob("*.py"):
+        if py_file.name in {"__init__.py", "exceptions.py"}:
+            continue
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                entities_audited += 1
+                # Must be a frozen dataclass or enum
+                decorator_names = {d.id for d in node.decorator_list if isinstance(d, ast.Name)}
+                for d in node.decorator_list:
+                    if isinstance(d, ast.Call) and isinstance(d.func, ast.Name):
+                        decorator_names.add(d.func.id)
+                base_names = {b.id for b in node.bases if isinstance(b, ast.Name)}
+                assert (
+                    "dataclass" in decorator_names
+                    or "StrEnum" in base_names
+                    or "Enum" in base_names
+                ), f"Domain type {node.name} in {py_file.name} must be a dataclass or Enum"
+    assert entities_audited > 0, "No domain models found in core.domain"

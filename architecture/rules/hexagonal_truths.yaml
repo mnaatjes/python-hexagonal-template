@@ -130,3 +130,90 @@ truths:
     verification_tests:
       - path: "template/tests/architecture/test_boundaries.py"
         test_function: "test_domain_and_use_cases_have_zero_lifecycle_pollution"
+
+  - id: "HEXA-TRUTH-06"
+    name: "Domain-to-Port Isolation"
+    summary: "The core domain must never import ports or use cases; entities know nothing of boundary ports or orchestration."
+    enforcements:
+      - mechanism: "import_linter"
+        contract_name: "domain_port_isolation"
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_never_imports_ports_or_use_cases"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-06"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-06"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_never_imports_ports_or_use_cases"
+
+  - id: "HEXA-TRUTH-07"
+    name: "Business Exception Sovereignty"
+    summary: "Domain exceptions must inherit from a pure root DomainError and never catch or wrap infrastructure exceptions."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_exceptions_inherit_from_domain_error"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-07"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-07"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_exceptions_inherit_from_domain_error"
+
+  - id: "HEXA-TRUTH-08"
+    name: "Zero Global Mutable State in Domain"
+    summary: "The core domain must never declare mutable module-level collections, caches, or singletons."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_has_zero_global_mutable_state"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-08"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-08"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_has_zero_global_mutable_state"
+
+  - id: "HEXA-TRUTH-09"
+    name: "Pure In-Memory Determinism"
+    summary: "Domain logic must be deterministic and pure, never accessing ambient environment variables (os.environ) or unsanctioned system state."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_has_zero_ambient_environment_access"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-09"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-09"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_has_zero_ambient_environment_access"
+
+  - id: "HEXA-TRUTH-10"
+    name: "Self-Validating Entity Invariants"
+    summary: "Domain entities and value objects must enforce their own validity at instantiation and never exist in an invalid state."
+    enforcements:
+      - mechanism: "pytest_archon"
+        test_file: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_entities_are_self_validating"
+    documentation:
+      path: "template/docs/reference/hexagonal_rules.md"
+      anchor: "HEXA-TRUTH-10"
+    agent_skill:
+      path: "template/.gemini/rules/hexagonal_invariants.md"
+      anchor: "HEXA-TRUTH-10"
+    verification_tests:
+      - path: "template/tests/architecture/test_boundaries.py"
+        test_function: "test_domain_entities_are_self_validating"

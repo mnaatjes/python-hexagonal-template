@@ -150,6 +150,53 @@ def test_downstream_negative_mutation_lifecycle_pollution(rendered_downstream: P
     assert err_needle in res.stdout or err_needle in res.stderr
 
 
+def test_downstream_domain_exceptions_exist(rendered_downstream: Path) -> None:
+    """Positive test: verifies that DomainError hierarchy renders in core/domain/exceptions.py."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    exc_file = pkg_dir / "core" / "domain" / "exceptions.py"
+    assert exc_file.is_file()
+    content = exc_file.read_text(encoding="utf-8")
+    assert "class DomainError(Exception):" in content
+    assert "class DomainValidationError(DomainError):" in content
+
+
+def test_downstream_negative_mutation_domain_port_isolation(
+    rendered_downstream: Path,
+) -> None:
+    """Negative test: asserts that importing core.ports in domain fails boundary tests."""
+    pkg_dir = rendered_downstream / "src" / "hexagonal_service"
+    domain_file = pkg_dir / "core" / "domain" / "health.py"
+
+    # Inject port import into domain
+    domain_file.write_text(
+        "from hexagonal_service.core.ports.driving.health_port import GetHealthPort\n",
+        encoding="utf-8",
+    )
+
+    repo_root = Path(__file__).parent.parent
+    pytest_bin = (
+        shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest") or sys.executable
+    )
+    cmd = [pytest_bin, str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py")]
+    if pytest_bin == sys.executable:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(rendered_downstream / "tests" / "architecture" / "test_boundaries.py"),
+        ]
+
+    res = subprocess.run(
+        cmd,
+        cwd=rendered_downstream,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode != 0
+    err_needle = "illegally imports port"
+    assert err_needle in res.stdout or err_needle in res.stderr
+
+
 def test_downstream_rendered_architecture_tests_pass(rendered_downstream: Path) -> None:
     """Verifies that downstream test_boundaries.py executes and passes on pristine render."""
     repo_root = Path(__file__).parent.parent
