@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upstream agent authoring skill (`.gemini/skills/hexagonal-truth-authoring/`) and system governance rule (`.gemini/rules/hexagonal_truth_governance.md`).
 - Automated test suite for validator runner (`tests/test_verify_truths.py`).
 - Adopted ADR 0002 and SDD-0002 with main-only `bump-my-version` release governance and explicit dependency onboarding topology.
+- Root marker protocols in `template/src/{{package_name}}/core/ports/base.py` (`Port`, `DrivingPort`, `DrivenPort`).
+- Codified and quad-plane enforced `HEXA-TRUTH-16` (Zero Implementation Code in Ports), `HEXA-TRUTH-17` (Technology-Agnostic Port Nomenclature), and `HEXA-TRUTH-18` (Strict Port Package Import Whitelist).
+- Four-level port-adapter lexicon documented in `architecture/glossary.md` covering marker taxonomy, domain contracts, use cases, and concrete adapters.
+- Enforced self-documenting inheritance across the walking skeleton (`GetHealthPort(DrivingPort)`, `SystemProbePort(DrivenPort)`, `CheckHealthUseCase(GetHealthPort)`, and `OsSystemProbeAdapter(SystemProbePort)`).
+- Template Python Purity Directive codified in `.gemini/rules/template_python_purity.md`, permanently eliminating `.jinja` source files from `template/src/` via pure intra-package relative imports.
 
 ## [0.1.0] - 2026-10-12
 
