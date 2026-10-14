@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shipped `FakeSystemProbeAdapter` in `template/tests/doubles/` satisfying `HEXA-TRUTH-27` test double parity.
 - Adopted ADR 0005 and SDD-0005 establishing Data Transfer Object (DTO) governance and protocol standards.
 - Codified and quad-plane enforced `HEXA-TRUTH-28` (DTO Immutability & Structural Purity) establishing `DataTransferObject` marker protocol, frozen dataclass invariants, and automated topological exclusion scanning preventing misplaced DTOs in `adapters/` and `core/domain/`.
+- Adopted ADR 0006 and SDD-0006 establishing structural governance and mechanical invariants for the internal chambers of the hexagon (`core/domain/` and `core/use_cases/`) covering `HEXA-TRUTH-29` through `HEXA-TRUTH-33`.
 
 
 
