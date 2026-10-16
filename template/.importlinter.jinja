@@ -1,15 +1,15 @@
 [importlinter]
 root_packages =
-    core
-    adapters
+    {{ package_name }}.core
+    {{ package_name }}.adapters
 
 [importlinter:contract:core_domain_isolation]
 name = core_domain_isolation
 type = forbidden
 source_modules =
-    core.domain
+    {{ package_name }}.core.domain
 forbidden_modules =
-    adapters
+    {{ package_name }}.adapters
     external
     frameworks
 
@@ -17,26 +17,26 @@ forbidden_modules =
 name = inward_dependency_direction
 type = layers
 layers =
-    adapters
-    core.use_cases
-    core.domain
+    {{ package_name }}.adapters
+    {{ package_name }}.core.use_cases
+    {{ package_name }}.core.domain
 
 [importlinter:contract:domain_port_isolation]
 name = domain_port_isolation
 type = forbidden
 source_modules =
-    core.domain
+    {{ package_name }}.core.domain
 forbidden_modules =
-    core.ports
-    core.use_cases
+    {{ package_name }}.core.ports
+    {{ package_name }}.core.use_cases
 
 [importlinter:contract:use_case_transport_isolation]
 name = use_case_transport_isolation
 type = forbidden
 source_modules =
-    core.use_cases
+    {{ package_name }}.core.use_cases
 forbidden_modules =
-    adapters
+    {{ package_name }}.adapters
     fastapi
     starlette
     flask
@@ -47,9 +47,9 @@ forbidden_modules =
 name = composition_root_isolation
 type = forbidden
 source_modules =
-    core.domain
-    core.ports
-    core.use_cases
-    adapters
+    {{ package_name }}.core.domain
+    {{ package_name }}.core.ports
+    {{ package_name }}.core.use_cases
+    {{ package_name }}.adapters
 forbidden_modules =
-    bootstrap
+    {{ package_name }}.bootstrap

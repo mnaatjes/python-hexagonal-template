@@ -3,7 +3,7 @@ schema_version: "0.1.0"
 enforcement_catalog:
   import_linter:
     description: "Static import graph contracts via .importlinter"
-    config_file: "template/.importlinter"
+    config_file: "template/.importlinter.jinja"
   pytest_archon:
     description: "Fluent architectural layer assertion tests"
     test_dir: "template/tests/architecture"

@@ -20,10 +20,10 @@ repos:
     hooks:
       - id: djlint-reformat-jinja
         files: ^template/.*\.jinja$
-        exclude: ^template/(\.github|src)/.*\.jinja$
+        exclude: ^template/(\.github|src|\.importlinter)/.*\.jinja$|^template/\.importlinter\.jinja$
       - id: djlint-jinja
         files: ^template/.*\.jinja$
-        exclude: ^template/(\.github|src)/.*\.jinja$
+        exclude: ^template/(\.github|src|\.importlinter)/.*\.jinja$|^template/\.importlinter\.jinja$
 
   - repo: local
     hooks:
