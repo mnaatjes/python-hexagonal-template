@@ -11,12 +11,12 @@ class Port(Protocol):
 
 
 @runtime_checkable
-class DrivingPort(Port):
+class DrivingPort(Port, Protocol):
     """Inbound / Primary port protocol implemented by use cases or core services."""
 
 
 @runtime_checkable
-class DrivenPort(Port):
+class DrivenPort(Port, Protocol):
     """Outbound / Secondary port protocol implemented by external adapters."""
 
 

@@ -249,8 +249,8 @@ def test_downstream_port_markers_exist(rendered_downstream: Path) -> None:
     assert base_file.is_file()
     content = base_file.read_text(encoding="utf-8")
     assert "class Port(Protocol):" in content
-    assert "class DrivingPort(Port):" in content
-    assert "class DrivenPort(Port):" in content
+    assert "class DrivingPort(Port, Protocol):" in content
+    assert "class DrivenPort(Port, Protocol):" in content
 
 
 def test_downstream_negative_mutation_port_concrete_code(
