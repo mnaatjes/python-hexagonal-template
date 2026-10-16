@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from ...domain.health import SystemHealth
 from ..base import DrivingPort
 
 
 @runtime_checkable
-class GetHealthPort(DrivingPort):
+class GetHealthPort(DrivingPort, Protocol):
     """Primary port implemented by use cases or application services."""
 
     def check_health(self) -> SystemHealth:
