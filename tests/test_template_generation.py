@@ -59,3 +59,18 @@ def test_template_instantiation_with_defaults(tmp_path: Path) -> None:
     assert 'name = "hexagonal-service"' in pyproject_content
     assert "{{" not in pyproject_content
     assert "}}" not in pyproject_content
+
+    # Permanent Divergence Prevention: Run mypy and pytest directly on rendered target
+    mypy_bin = shutil.which("mypy") or str(repo_root / ".venv" / "bin" / "mypy")
+    mypy_res = subprocess.run([mypy_bin, "src/"], cwd=target_dir, capture_output=True, text=True)
+    assert (
+        mypy_res.returncode == 0
+    ), f"Mypy failed on rendered template:\n{mypy_res.stdout}\n{mypy_res.stderr}"
+
+    pytest_bin = shutil.which("pytest") or str(repo_root / ".venv" / "bin" / "pytest")
+    pytest_res = subprocess.run(
+        [pytest_bin, "tests/architecture/"], cwd=target_dir, capture_output=True, text=True
+    )
+    assert (
+        pytest_res.returncode == 0
+    ), f"Pytest failed on rendered template:\n{pytest_res.stdout}\n{pytest_res.stderr}"
