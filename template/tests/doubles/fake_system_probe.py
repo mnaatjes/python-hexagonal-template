@@ -28,12 +28,10 @@ class FakeSystemProbeAdapter(SystemProbePort):
             return SystemHealth(
                 status="unhealthy",
                 service_name=service_name,
-                details={"error": "Simulated probe failure"},
             )
         return SystemHealth(
             status=self._status,
             service_name=service_name,
-            details=self._details,
         )
 
     def set_failure_mode(self, should_fail: bool) -> None:

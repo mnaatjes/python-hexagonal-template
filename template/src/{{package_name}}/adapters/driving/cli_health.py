@@ -29,7 +29,6 @@ class CliHealthAdapter:
             "status": health.status,
             "service_name": health.service_name,
             "timestamp": health.timestamp.isoformat(),
-            "details": health.details,
         }
         exit_code = 0 if health.status == "healthy" else 1
         return exit_code, json.dumps(payload, indent=2)
