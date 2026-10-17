@@ -22,8 +22,10 @@ jobs:
       - name: Install Astral uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Synchronize Virtual Environment
-        run: uv sync --all-extras
+      - name: Synchronize Virtual Environment & Install Package
+        run: |
+          uv sync --all-extras
+          uv pip install -e .
 
       - name: Run Deterministic Verification Runner
         run: uv run python scripts/verify.py
