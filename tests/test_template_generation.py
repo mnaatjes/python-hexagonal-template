@@ -74,3 +74,16 @@ def test_template_instantiation_with_defaults(tmp_path: Path) -> None:
     assert (
         pytest_res.returncode == 0
     ), f"Pytest failed on rendered template:\n{pytest_res.stdout}\n{pytest_res.stderr}"
+
+    lint_bin = shutil.which("lint-imports") or str(repo_root / ".venv" / "bin" / "lint-imports")
+    if shutil.which("lint-imports") or (repo_root / ".venv" / "bin" / "lint-imports").exists():
+        lint_res = subprocess.run(
+            [lint_bin],
+            cwd=target_dir,
+            capture_output=True,
+            text=True,
+            env=dict(subprocess.os.environ, PYTHONPATH=str(target_dir / "src")),
+        )
+        assert (
+            lint_res.returncode == 0
+        ), f"lint-imports failed on rendered template:\n{lint_res.stdout}\n{lint_res.stderr}"

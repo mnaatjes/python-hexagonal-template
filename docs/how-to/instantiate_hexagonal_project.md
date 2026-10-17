@@ -109,8 +109,15 @@ my-new-service/
    ```bash
    cd ~/src/github.com/mnaatjes/my-new-service
    ```
-2. Run the deterministic quality gate to verify baseline compliance:
+2. Synchronize environment and install the package in editable mode:
+   ```bash
+   uv sync --all-extras
+   uv pip install -e .
+   ```
+   > [!NOTE]
+   > Installing the project in editable mode (`uv pip install -e .`) ensures your service package is discoverable on `sys.path` by boundary linters (`import-linter` / `lint-imports`) and static analyzers.
+3. Run the deterministic quality gate to verify baseline compliance:
    ```bash
    uv run python scripts/verify.py
    ```
-3. Begin defining driving ports in `src/<package_name>/core/ports/driving/`.
+4. Begin defining driving ports in `src/<package_name>/core/ports/driving/`.
